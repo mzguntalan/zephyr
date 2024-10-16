@@ -1,0 +1,97 @@
+from typing import Optional
+
+from jax import nn
+from jax import numpy as jnp
+from jaxtyping import Array
+from jaxtyping import PyTree
+
+from zephyr._nets.mlp import branch_linear
+from zephyr._nets.mlp import linear
+from zephyr.building import initializers
+from zephyr.masking import apply_attention_mask
+
+
+def single_head_attention(
+    params: PyTree,
+    queries: Array,
+    keys: Array,
+    values: Array,
+    masks: Optional[Array] = None,
+    with_bias: bool = True,
+    initializer=initializers.initializer_base,
+) -> Array:
+    keys = linear(params["linear_keys"], keys, keys.shape[-1], with_bias, initializer)
+    queries = linear(
+        params["linear_queries"], queries, keys.shape[-1], with_bias, initializer
+    )
+    values = linear(
+        params["linear_values"], values, values.shape[-1], with_bias, initializer
+    )
+
+    # keys [... s k]
+    # queries [... p k]
+    # values [... s v]
+    # target [... p v]
+
+    scores = queries @ jnp.moveaxis(values, -1, -2)  # TODO apply mask
+    if masks:
+        scores = apply_attention_mask(scores, masks)
+    attention_map = nn.softmax(scores, axis=-1)
+
+    answers = attention_map @ values
+    return answers
+
+
+def multi_head_attention(
+    params: PyTree,
+    queries: Array,
+    keys: Array,
+    values: Array,
+    num_heads: int,
+    masks: Optional[Array] = None,
+    with_bias: bool = True,
+    initializer=initializers.initializer_base,
+) -> Array:
+
+    queries = branch_linear(
+        params["branch_linear_queries"], queries, num_heads, with_bias, initializer
+    )
+    keys = branch_linear(
+        params["branch_linear_keys"], keys, num_heads, with_bias, initializer
+    )
+    values = branch_linear(
+        params["branch_linear_values"], values, num_heads, with_bias, initializer
+    )
+
+    # queries, keys, values [..., s, h, e]
+    #                       [...,-3,-2,-1]
+
+    queries = jnp.moveaxis(queries, -2, -3)
+    keys = jnp.moveaxis(keys, -2, -3)
+    values = jnp.moveaxis(values, -2, -3)
+
+    multi_head_answers = single_head_attention(
+        params["single_head_attention"],
+        queries,
+        keys,
+        values,
+        masks,
+        with_bias,
+        initializer,
+    )  # [..., h, s, e]
+
+    multi_head_answers = jnp.moveaxis(multi_head_answers, -2, -3)  # [..., s , h, e]
+
+    combined_heads = jnp.reshape(
+        multi_head_answers, multi_head_answers.shape[:-2] + (-1,)
+    )
+
+    combined_heads = linear(
+        params["linear_combined_heads"],
+        combined_heads,
+        combined_heads.shape[-1] // num_heads,
+        with_bias,
+        initializer,
+    )
+
+    return combined_heads
