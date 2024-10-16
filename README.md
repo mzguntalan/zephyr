@@ -2,7 +2,9 @@
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
 
-## Summary
+[Summary](#summary) | [Core Principle](#core) | [Example: Autoencoder](#autoencoder) | [Example: Linear](#linear) | [Motivation and Inspiration](#motivation)
+
+## Summary<a id="summary"></a>
 The [JAX](https://github.com/jax-ml/jax) library offers most things that you need for making neural networks, but there is no 
 shortage of frameworks/libraries that build on JAX to cater to neural net building. 
 
@@ -11,14 +13,14 @@ zephyr focuses on 2 things:
 - **Parameter Creation**. The number one pain point for using jax for neural networks is the difficulty of the laborious and tedious process of creating the parameters
 - **Simplicity**. Neural networks are pure functions, but none of the frameworks present neural network as such pure functions. They always treat a neural network as something extra which is why you would need some special methods or transforms or re-duplicated jax methods.
 
-## Core Principle 
+## Core Principle<a id="core"></a>
 A neural network $f$ is simply mathematical function of data $X$, parameters $\theta$, and hyper-parameters $\alpha$. We place $\theta$ as the first parameter of $f$ because `jax.grad` creates the gradient of $f$ wrt to the first parameter.
 $$ f(\theta, X, \alpha) $$
 
 ## Examples
 Here are two examples to demonstrate and highlight what zephyr empowers: simplicity, and control.
 
-### Making an autoencoder
+### Making an autoencoder<a id="autoencoder"></a>
 Let's make a simple autoencoder. The encoder will use 2 mlp's in succession and the decoder will use just 1. 
 ```python
 from zephyr._nets.mlp import mlp
@@ -97,7 +99,7 @@ encoding_of_flipped_encoder = flipped_encoder(params["encoder"], x, embed_dim, l
 
 As you can see, by being on the jax-level all the time, you are free to do whatever you want. Coding becomes short and to the point. 
 
-## Example: Building Layers From Scratch
+### Building Layers From Scratch<a id="linear"></a>
 Usually it is rare that one would need to instantiate their own trainable weights (specifying the shape and initializer) since Linear / MLP layers usually suffice for that. Frameworks usually differ in how to handle parameter building and it is part of what makes the core
 experience in these frameworks. This part is also where clever things in each framework is hidden. For zephyr, it wanted to keep 
 functions pure, but parameter building is hard. To make it easier zephyr had to rely on python's quirkyness. 
@@ -139,7 +141,7 @@ sample_outputs = linear(params, dummy_inputs, 128) # shape: [64, 128]
 ```
 
 
-## Motivation and Inspiration
+## Motivation and Inspiration<a id="motivation"></a>
 This library is heavily inspired by [Haiku](https://github.com/google-deepmind/dm-haiku)'s `transform` function which eventually
 converts impure functions/class-method-calls into a pure function paired with an initilized `params` PyTree. This is my favorite 
 approach so far because it is closest to pure functional programming. Zephyr tries to push this to the simplest and make neural networks 
