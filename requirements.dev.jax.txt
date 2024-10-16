@@ -1,0 +1,5 @@
+jax==0.4.28
+jax-cuda12-pjrt==0.4.28
+jax-cuda12-plugin==0.4.28
+jaxlib==0.4.28
+jaxtyping==0.2.29
