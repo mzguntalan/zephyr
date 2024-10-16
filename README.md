@@ -31,6 +31,7 @@ def encoder(params, x, embed_dim, latent_dim):
 
 def decoder(params, x, embed_dim, original_dim):
     x = mlp(params, x, [embed_dim, embed_dim, latent_dim])
+    return x
 
 def autoencoder(params, x, embed_dim, latent_dim):
     encoding = encoder(params["encoder"], x, embed_dim, latent_dim)
