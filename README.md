@@ -1,5 +1,7 @@
 # zephyr
 
+NOTE: Work in progress; enough to demonstrate the core feature; very early stage
+
 ## Summary
 The [JAX](https://github.com/jax-ml/jax) library offers most things that you need for making neural networks, but there is no 
 shortage of frameworks/libraries that build on JAX to cater to neural net building. 
