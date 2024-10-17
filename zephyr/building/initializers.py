@@ -16,7 +16,11 @@ from typing import Union
 
 
 def initializer_base(key: KeyArray, shape: Shape) -> Array:
-    return random.uniform(key, shape)
+    if len(shape) > 1:
+        return kaiming_normal(
+            key, shape
+        )  # todo: maybe zephyr should use leaky_relu as default activation?
+    return zeros(key, shape)  # bias terms are usually rank 0
 
 
 def ones(key: KeyArray, shape: Shape) -> Array:
