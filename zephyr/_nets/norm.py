@@ -25,6 +25,7 @@ def layer_norm(
     mean = jnp.mean(x, axis=axis, keepdims=True)
     variance = jnp.var(x, axis=axis, keepdims=True)
 
+    # todo: if scale or offset is not created, do not create a parameter as this is just a constant
     scale = jnp.array([1.0])
     if create_scale:
         params["scale"] == template.array((1,), initializer)
