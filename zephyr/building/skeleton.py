@@ -8,7 +8,7 @@ from zephyr.project_typing import KeyArray
 class Skeleton:
     def __init__(self, key: KeyArray = random.PRNGKey(0)):
         self._contents = {}
-        self._key = random.PRNGKey(key)
+        self._key = key
         self.dtype = (
             jnp.float32
         )  # some jax operations don't work if the object does not have a valid jax dtype;
