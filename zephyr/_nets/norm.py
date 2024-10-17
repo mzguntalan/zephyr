@@ -14,14 +14,14 @@ from zephyr.masking import apply_attention_mask
 
 
 def layer_norm(
-    params,
-    x,
-    axis,
+    params: PyTree,
+    x: Array,
+    axis: int,
     create_scale: bool = True,
     create_offset: bool = True,
     eps: float = 1e-5,
     initializer=initializers.initializer_base,
-):
+) -> Array:
     mean = jnp.mean(x, axis=axis, keepdims=True)
     variance = jnp.var(x, axis=axis, keepdims=True)
 
