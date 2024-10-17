@@ -14,12 +14,13 @@ def token_embed(
     x_token_ids: Array,
     vocab_size: int,
     embed_dim: int,
-    embedding_matrix: Optional[Array] = None,
+    initial_embedding_matrix: Optional[Array] = None,
     initializer: Initializer = initializer_base,
 ) -> Array:
-    if embedding_matrix is not None:
+    if initial_embedding_matrix is not None:
         params["token_embeddings"] == template.array(
-            (vocab_size, embed_dim), initializer=lambda key, shape: embedding_matrix
+            (vocab_size, embed_dim),
+            initializer=lambda key, shape: initial_embedding_matrix,
         )
     else:
         params["token_embeddings"] == template.array(
