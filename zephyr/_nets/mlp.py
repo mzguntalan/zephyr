@@ -60,7 +60,10 @@ def mlp(
     for i, target_out in enumerate(out_dims[:-1]):
         x = activation(linear(params[i], x, target_out, initializer_weight=initializer))
 
-    i += 1
+    if len(out_dims[:-1]) == 0:
+        i = 0
+    else:
+        i += 1
     x = linear(params[i], x, out_dims[-1], initializer_weight=initializer)
 
     if activate_final:
