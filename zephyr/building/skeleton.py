@@ -45,7 +45,7 @@ class SkeletalParams:
     def __rmatmul__(self, x):
         return x @ self._contents(self._key)
 
-    def __trueiv__(self, x):
+    def __truediv__(self, x):
         return self._contents(self._key) / x
 
     def __rtruediv__(self, x):
