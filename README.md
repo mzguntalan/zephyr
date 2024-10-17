@@ -1,11 +1,12 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-purple)
+![Version 0.0.0a1](https://img.shields.io/badge/version-0.0.0a1-yellow)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
 
-[Summary](#summary) | [Core Principle](#core) | [Example: Autoencoder](#autoencoder) | [Example: Linear](#linear) | [Motivation and Inspiration](#motivation)
+[Summary](#summary) | [Core Principle](#core) | [Example: Autoencoder](#autoencoder) | [Example: Linear](#linear) | [Motivation and Inspiration](#motivation) | [Installation](#installation)
 
 ## Summary<a id="summary"></a>
 The [JAX](https://github.com/jax-ml/jax) library offers most things that you need for making neural networks, but there is no 
@@ -161,6 +162,13 @@ This library is also inspired by other frameworks I have tried in the past: Tens
 inference to happen after the first pass of inputs, PyTorch (before the Lazy Modules) need the input shapes at layer creation. Zephyr 
 wants to be as easy as possible and will strive to always use at-inference-time shape-inference and use relative axis positions whenever possible. 
 
+
+## Installation<a id="installation"></a>
+Warning: still in the **alpha** version. Expect occasional bugs, especially when doing `trace`, please submit them to Issues.
+
+```bash
+pip install z-zephyr
+```
 
 
 
