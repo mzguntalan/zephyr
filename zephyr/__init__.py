@@ -1,0 +1,8 @@
+"""zephyr
+A neural network library on top of JAX allowing for easy and fast neural network designing, creation, and manipulation
+
+Early Stage
+"""
+
+__version__ = "0.0.0a1"
+__author__ = "Marko Zolo Gozano Untalan"
