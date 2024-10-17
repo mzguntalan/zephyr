@@ -1,3 +1,4 @@
+from jax import Array
 from jax import numpy as jnp
 from jax import random
 
@@ -32,6 +33,9 @@ class Skeleton:
             return self._contents(key)  # array
 
     def __jax_array__(self):
+        return self._contents(self._key)
+
+    def __array__(self):
         return self._contents(self._key)
 
     def __getitem__(self, key):
