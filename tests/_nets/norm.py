@@ -1,3 +1,4 @@
+import numpy as np
 from jax import nn
 from jax import numpy as jnp
 from jax import random
@@ -17,7 +18,9 @@ from zephyr.project_typing import Shape
         (jnp.ones([8, 16]), 1, (8, 16)),
     ],
 )
-def test_layer_norm_shape(x, axis, expected_shape_after_apply: Shape) -> None:
+def test_layer_norm_shape(
+    x: Array, axis: int, expected_shape_after_apply: Shape
+) -> None:
     params = trace(layer_norm, random.PRNGKey(0), x, axis)
     z = layer_norm(params, x, axis)
     assert z.shape == expected_shape_after_apply

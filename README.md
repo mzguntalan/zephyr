@@ -55,13 +55,17 @@ We have an autoencoder, now how do we instatiate the model? As said before, no i
 `params`. This is easy with the `trace` function.
 ```python
 from zephyr.building.tracing import trace
+from jax import random
 
 batch_size = 8
 initial_dim = 64
 latent_dim = 256
 embed_dim = 512
+
+key = random.PRNKey(0)
 x = jnp.ones([batch_size, initial_dim]) # this is a sample input
-params = trace(autoencoder, x, embed_dim, latent_dim)
+
+params = trace(autoencoder, key, x, embed_dim, latent_dim)
 
 """
 params = {
@@ -137,10 +141,11 @@ what template that parameter follows before using it.
 And as seen, earlier, to use this, just use the `trace` function.
 
 ```python
-from jax import numpy as jnp
+from jax import numpy as jnp, random
 
+key = random.PRNKey(0)
 dummy_inputs = jnp.ones([64, 8])
-params = trace(linear, dummy_inputs, 128)
+params = trace(linear, key, dummy_inputs, 128)
 
 sample_outputs = linear(params, dummy_inputs, 128) # shape: [64, 128]
 ```
