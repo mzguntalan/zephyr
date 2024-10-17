@@ -15,6 +15,7 @@ zephyr focuses on 2 things:
 
 ## Core Principle<a id="core"></a>
 A neural network $f$ is simply mathematical function of data $X$, parameters $\theta$, and hyper-parameters $\alpha$. We place $\theta$ as the first parameter of $f$ because `jax.grad` creates the gradient of $f$ wrt to the first parameter.
+
 $$ f(\theta, X, \alpha) $$
 
 ## Examples
