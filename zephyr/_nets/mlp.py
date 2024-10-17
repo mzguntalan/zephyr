@@ -12,15 +12,16 @@ def linear(
     x: Array,
     target_out: int,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
+    initializer_weight=initializers.initializer_base,
+    initializer_bias=initializers.zeros,
 ) -> Array:
-    params["weights"] == template.array((target_out, x.shape[-1]), initializer)
+    params["weights"] == template.array((target_out, x.shape[-1]), initializer_weight)
     z = jnp.expand_dims(x, axis=-1)
     z = params["weights"] @ z
     z = jnp.squeeze(z, axis=-1)
 
     if with_bias:
-        params["bias"] == template.array((target_out,), initializer)
+        params["bias"] == template.array((target_out,), initializer_bias)
         z = params["bias"] + z
 
     return z
@@ -57,10 +58,10 @@ def mlp(
     initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
     for i, target_out in enumerate(out_dims[:-1]):
-        x = activation(linear(params[i], x, target_out, initializer=initializer))
+        x = activation(linear(params[i], x, target_out, initializer_weight=initializer))
 
     i += 1
-    x = linear(params[i], x, out_dims[-1], initializer=initializer)
+    x = linear(params[i], x, out_dims[-1], initializer_weight=initializer)
 
     if activate_final:
         x = activation(x)
