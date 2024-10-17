@@ -23,7 +23,7 @@ class Skeleton:
                 if callable(r):
                     self._key, key = random.split(self._key)
                     r = r(key)
-                else:  # is an skeletal params
+                else:  # is an skeletal
                     r = r.materialize()
                 d[k] = r
             return d
