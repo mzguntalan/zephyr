@@ -4,7 +4,7 @@ from jax import random
 from zephyr.building.template import ArrayTemplate
 
 
-class SkeletalParams:
+class Skeleton:
     def __init__(self, seed=0):
         self._contents = {}
         self._key = random.PRNGKey(seed)
@@ -13,7 +13,7 @@ class SkeletalParams:
         if key in self._contents:
             return self._contents[key]
         else:
-            new_params = SkeletalParams()
+            new_params = Skeleton()
             self._contents[key] = new_params
             return self._contents[key]
 

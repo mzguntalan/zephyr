@@ -1,8 +1,8 @@
-from zephyr.building.skeleton import SkeletalParams
+from zephyr.building.skeleton import Skeleton
 
 
 def trace(f, *args):
-    params = SkeletalParams()
+    params = Skeleton()
     f(params, *args)
 
     return params.materialize()
