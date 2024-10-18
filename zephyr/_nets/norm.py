@@ -10,8 +10,9 @@ from zephyr._nets.mlp import branch_linear
 from zephyr._nets.mlp import linear
 from zephyr.building import initializers
 from zephyr.building import template
-from zephyr.building.initializers import Initializer 
+from zephyr.building.initializers import Initializer
 from zephyr.masking import apply_attention_mask
+
 
 def layer_norm(
     params: PyTree,
@@ -20,7 +21,7 @@ def layer_norm(
     create_scale: bool = True,
     create_offset: bool = True,
     eps: float = 1e-5,
-    initializerL=: Initializer=initializers.initializer_base,
+    initializer: Initializer = initializers.initializer_base,
 ) -> Array:
     mean = jnp.mean(x, axis=axis, keepdims=True)
     variance = jnp.var(x, axis=axis, keepdims=True)
