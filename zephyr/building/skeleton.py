@@ -1,19 +1,26 @@
+from collections.abc import Sequence
+from typing import Any
+
+import jax
+import numpy as np
 from jax import Array
 from jax import numpy as jnp
 from jax import random
 
 from zephyr.building.template import ArrayTemplate
 from zephyr.project_typing import KeyArray
+from zephyr.project_typing import Shape
+
+# match jax._src.basearray typing
+Shard = Any
+Sharding = Any
+Device = Any
 
 
-class Skeleton:
+class Skeleton(Array):
     def __init__(self, key: KeyArray = random.PRNGKey(0)):
         self._contents = {}
         self._key = key
-        self.dtype = (
-            jnp.float32
-        )  # some jax operations don't work if the object does not have a valid jax dtype;
-        # if it does then jax calls __jax_array__
 
     def materialize(self):
         """This initializes the arrays at the leaves using the appropriate initializers"""
@@ -33,10 +40,10 @@ class Skeleton:
             return self._contents(key)  # array
 
     def __jax_array__(self):
-        return self._contents(self._key)
+        return self.materialize()
 
     def __array__(self):
-        return self._contents(self._key)
+        return self.materialize()
 
     def __getitem__(self, key):
         if key in self._contents:
@@ -51,37 +58,89 @@ class Skeleton:
         return True
 
     def __add__(self, x):
-        return self._contents(self._key) + x
+        return self.materialize() + x
 
     def __radd__(self, x):
-        return x + self._contents(self._key)
+        return x + self.materialize()
 
     def __sub__(self, x):
-        return self._contents(self._key) - x
+        return self.materialize() - x
 
     def __rsub__(self, x):
-        return x - self._contents(self._key)
+        return x - self.materialize()
 
     def __mul__(self, x):
-        return self._contents(self._key) * x
+        return self.materialize() * x
 
     def __rmul__(self, x):
-        return x * self._contents(self._key)
+        return x * self.materialize()
 
     def __matmul__(self, x):
-        return self._contents(self._key) @ x
+        return self.materialize() @ x
 
     def __rmatmul__(self, x):
-        return x @ self._contents(self._key)
+        return x @ self.materialize()
 
     def __truediv__(self, x):
-        return self._contents(self._key) / x
+        return self.materialize() / x
 
     def __rtruediv__(self, x):
-        return x / self._contents(self._key)
+        return x / self.materialize()
 
     def __pow__(self, n):
-        return self._contents(self._key) ** n
+        return self.materialize() ** n
 
     def __neg__(self):
-        return -self._contents(self._key)
+        return -self.materialize()
+
+    @property
+    def dtype(self) -> np.dtype:
+        return np.float32
+
+    @property
+    def ndim(self) -> int:
+        return len(self.materialize().shape)
+
+    @property
+    def size(self) -> int:
+        return np.prod(self.materialize().shape)
+
+    @property
+    def shape(self) -> Shape:
+        return self.materialize().shape
+
+    def addressable_data(self, index: int) -> Array:
+        return self.materialize().addressable_data(index)
+
+    @property
+    def addressable_shards(self) -> Sequence[Shard]:
+        return self.materialize().addressable_shards
+
+    @property
+    def global_shards(self) -> Sequence[Shard]:
+        return self.materialize().global_shards
+
+    @property
+    def is_fully_addressable(self) -> bool:
+        return self.materialize().is_fully_addressable
+
+    @property
+    def is_fully_replicated(self) -> bool:
+        return self.materialize().is_fully_replicated
+
+    @property
+    def sharding(self) -> Sharding:
+        return self.materialize().sharding
+
+    @property
+    def commited(self) -> bool:
+        return (
+            self.materialize().commited
+        )  # this might return an AttributeError, but that comes from jax initializing an array without this attribute <- not zephyr problem (so far)
+
+    @property
+    def device(self) -> Device | Sharding:
+        return jax.default_device()
+
+    def copy_to_host_async(self) -> None:
+        return
