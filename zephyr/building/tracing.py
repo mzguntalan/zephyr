@@ -6,6 +6,7 @@ from jaxtyping import Array
 from jaxtyping import PyTree
 
 from zephyr.building.skeleton import Skeleton
+from zephyr.building.skeleton import Skeleton as Tracer
 from zephyr.project_typing import KeyArray
 
 
