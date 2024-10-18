@@ -1,7 +1,7 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-purple)
-![Version 0.0.0a1](https://img.shields.io/badge/version-0.0.0a1-yellow)
+![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a2-yellow)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
@@ -169,6 +169,13 @@ Warning: still in the **alpha** version. Expect occasional bugs, especially when
 ```bash
 pip install z-zephyr
 ```
+This version offers (cummulative, no particular order)
+Major Features:
+- parameter tracing and initialization with `zephyr.building.tracing.trace` (well developed, core feature)
+- common layers and nets in `zephyr.nets` (unfinished)
+- common initializers (kaiming and glorot)
+- utilities for FP in python, jax and zephyr (useful, but not needed)
+    - placeholders instead of partial application for more readability
 
 
 
