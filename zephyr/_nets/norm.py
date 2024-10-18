@@ -30,16 +30,13 @@ def layer_norm(
     if create_scale:
         params["scale"] == template.array((1,), initializer)
         scale = params["scale"]
-    # todo: known bug, jnp.broadcast_to uses jax._src.lax.lax.asarray
-    # if instead, it used jnp.asarray, it would work
-    # for now, as a workaround, use jnp.asarray on params
-    scale = jnp.broadcast_to(jnp.asarray(scale), x.shape)
+    scale = jnp.broadcast_to(scale, x.shape)
 
     offset = jnp.zeros((x.shape[axis],))
     if create_offset:
         params["offset"] == template.array(offset.shape, initializer)
         offset = params["offset"]
-    offset = jnp.broadcast_to(jnp.asarray(offset), x.shape)
+    offset = jnp.broadcast_to(offset, x.shape)
 
     inversion = scale * rsqrt(variance + eps)
     normalized = inversion * (x - mean) + offset
