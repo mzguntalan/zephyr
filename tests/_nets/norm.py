@@ -45,11 +45,14 @@ def test_layer_norm_shape_no_offset_no_bool(
     params = trace(layer_norm, random.PRNGKey(0), x, axis, False, False)
     z = layer_norm(params, x, axis, False, False)
 
-    print(f"params {params}")
-
     has_params = lambda p: len(p) >= 1
 
     assert z.shape == expected_shape_after_apply
     assert not has_params(
         params
     )  # because offset and scale should not be trained and is therefore a constant in their formulae
+    mean = jnp.mean(z, axis)
+    standard_deviation = jnp.std(z, axis)
+
+    assert jnp.allclose(mean, jnp.zeros_like(mean))
+    assert jnp.allclose(standard_deviation, jnp.ones_like(standard_deviation))

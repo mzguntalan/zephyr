@@ -20,7 +20,7 @@ def layer_norm(
     axis: int,
     create_scale: bool = True,
     create_offset: bool = True,
-    eps: float = 1e-5,
+    eps: float = 1e-16,
     initializer: Initializer = initializers.initializer_base,
 ) -> Array:
     mean = jnp.mean(x, axis=axis, keepdims=True)
