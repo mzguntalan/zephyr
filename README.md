@@ -31,7 +31,7 @@ Here are two examples to demonstrate and highlight what zephyr empowers: simplic
 ### Making an autoencoder<a id="autoencoder"></a>
 Let's make a simple autoencoder. The encoder will use 2 mlp's in succession and the decoder will use just 1. 
 ```python
-from zephyr._nets.mlp import mlp
+from zephyr.nets import mlp
 def encoder(params, x, embed_dim, latent_dim):
     x = mlp(params["mlp_1"], x, [embed_dim, embed_dim])
     x = mlp(params["mlp_2"], x, [embed_dim, latent_dim])
@@ -66,7 +66,7 @@ initial_dim = 64
 latent_dim = 256
 embed_dim = 512
 
-key = random.PRNKey(0)
+key = random.PRNGKey(0)
 x = jnp.ones([batch_size, initial_dim]) # this is a sample input
 
 params = trace(autoencoder, key, x, embed_dim, latent_dim)
@@ -172,7 +172,7 @@ And as seen, earlier, to use this, just use the `trace` function.
 ```python
 from jax import numpy as jnp, random
 
-key = random.PRNKey(0)
+key = random.PRNGKey(0)
 dummy_inputs = jnp.ones([64, 8])
 params = trace(linear, key, dummy_inputs, 128)
 
