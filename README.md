@@ -141,7 +141,7 @@ Usually it is rare that one would need to instantiate their own trainable weight
 experience in these frameworks. This part is also where clever things in each framework is hidden. For zephyr, it wanted to keep 
 functions pure, but parameter building is hard, so that's what zephyr makes it easy.   
 
-Let's implement the linear layer from scratch. A linear layer would needs `weights` and `biases`. We assume that we already have formed `params` and we just have to 
+Let's implement the linear layer from scratch. A linear layer would need `weights` and `biases`. We assume that we already have formed `params` and we just have to 
 validate to ensure that 1) it exists and 2) it is of the right shape (also an initializer can be supplied so that the tracer takes note if you use the tracer/trace).
 If you try to handcraft your own params, instead of using the `trace` function, this validate will tell you if there is a mismatch with what you created and what it expected.
 ```python
