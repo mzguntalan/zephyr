@@ -35,7 +35,7 @@ def branch_linear(
     num_branches: int,
     with_bias: bool = True,
     initializer: initializers.Initializer = initializers.initializer_base,
-):
+) -> Array:
     """Branches the last dimension of `x` with each branch having the same dimension as the last dimension of `x`
 
     Example:
