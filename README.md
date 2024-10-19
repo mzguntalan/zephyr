@@ -6,6 +6,9 @@
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
 
+Feature requests are very welcome, ask them in the Github Issues.
+
+
 [Summary](#summary) | [Core Principle](#core) | [Example: Autoencoder](#autoencoder) | [Example: Linear](#linear) | [Motivation and Inspiration](#motivation) | [Installation](#installation)
 
 ## Summary<a id="summary"></a>
