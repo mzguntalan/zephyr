@@ -39,3 +39,11 @@ def test_validate(shape: Shape) -> None:
         )
     except:
         pass
+
+
+@mark.parametrize(["shape"], [((16, 16),), ((8,),), ((8, 16, 32),)])
+def test_validate_multiple_validations(shape) -> None:
+    params_skeleton = Skeleton()
+    validate(params_skeleton, shape, initializer_base)
+    validate(params_skeleton, shape, initializer_base)
+    pass

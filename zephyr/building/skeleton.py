@@ -1,5 +1,7 @@
 from collections.abc import Sequence
+from functools import partial
 from typing import Any
+from warnings import warn
 
 import jax
 import numpy as np
@@ -7,6 +9,7 @@ from jax import Array
 from jax import numpy as jnp
 from jax import random
 
+from zephyr.building._template.array import array_equal
 from zephyr.project_typing import ArrayTemplate
 from zephyr.project_typing import KeyArray
 from zephyr.project_typing import Shape
@@ -53,7 +56,24 @@ class Skeleton(Array):
             self._contents[key] = new_params
             return self._contents[key]
 
-    def __eq__(self, array_template: ArrayTemplate):
+    def _has_been_associated_with_an_array_template_before(self) -> bool:
+        return type(self._contents) is partial
+
+    def __eq__(self, array_template: ArrayTemplate) -> bool:
+        # todo: note to self <- __eq__ might be replaced with something else, as validate becomes more developed
+        if self._has_been_associated_with_an_array_template_before():
+            if array_equal(self._contents, array_template):
+                warn(
+                    f"Warning: params has been set before with shape {self._contents.keywords['shape']} "
+                    "and being set now with a SAME shape {array_template.keywords['shape']}.\n\n"
+                    "Please make sure that this is intentional.",
+                    RuntimeWarning,
+                )  # still unsure, what to do.. what if the user just wants to validate twice ?
+                return True
+
+            raise ValueError(
+                f"params has been set before with shape {self._contents.keywords['shape']} and being set now with the DIFFERENT shape {array_template.keywords['shape']}"
+            )  # this is definitely an error
         self._contents = array_template
         return True
 
