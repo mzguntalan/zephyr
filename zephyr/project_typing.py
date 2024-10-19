@@ -1,3 +1,4 @@
+from typing import Callable
 from typing import Literal
 from typing import NewType
 
@@ -15,3 +16,6 @@ ActivationFunctionsWithKnownGain = Literal[
     "relu",
     "leaky_relu",
 ]
+
+
+ArrayTemplate = Callable[[KeyArray], Array]

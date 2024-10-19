@@ -7,7 +7,7 @@ from jax import Array
 from jax import numpy as jnp
 from jax import random
 
-from zephyr.building.template import ArrayTemplate
+from zephyr.project_typing import ArrayTemplate
 from zephyr.project_typing import KeyArray
 from zephyr.project_typing import Shape
 
