@@ -26,16 +26,18 @@ def layer_norm(
     mean = jnp.mean(x, axis=axis, keepdims=True)
     variance = jnp.var(x, axis=axis, keepdims=True)
 
-    # todo: if scale or offset is not created, do not create a parameter as this is just a constant
+    axis = _relative_axis_to_absolute_axis(axis, x)
+    shape = tuple(x.shape[axis] if i == axis else 1 for i, d in enumerate(x.shape))
+
     scale = jnp.array([1.0])
     if create_scale:
-        params["scale"] == template.array((1,), initializer)
+        params["scale"] == template.array(shape, initializer)
         scale = params["scale"]
     scale = jnp.broadcast_to(scale, x.shape)
 
-    offset = jnp.zeros((x.shape[axis],))
+    offset = jnp.array([0.0])
     if create_offset:
-        params["offset"] == template.array(offset.shape, initializer)
+        params["offset"] == template.array(shape, initializer)
         offset = params["offset"]
     offset = jnp.broadcast_to(offset, x.shape)
 
@@ -43,3 +45,7 @@ def layer_norm(
     normalized = inversion * (x - mean) + offset
 
     return normalized
+
+
+def _relative_axis_to_absolute_axis(axis: int, reference_array: Array) -> int:
+    return tuple(range(reference_array.ndim))[axis]
