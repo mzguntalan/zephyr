@@ -165,6 +165,7 @@ def linear(
 
     return z
 ```
+As a rule of thumb, if you're going to manipulate a params or do arithmetic with it (eg. `jnp.transpose(params)` or `params + 2`), then validate it before those operations (you only need to validate it once).
 
 And as seen, earlier, to use this, just use the `trace` function.
 
