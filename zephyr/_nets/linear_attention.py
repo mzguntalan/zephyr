@@ -5,6 +5,7 @@ from jaxtyping import PyTree
 
 from zephyr._nets.mlp import branch_linear
 from zephyr._nets.mlp import linear
+from zephyr._nets.mlp import linear_like
 from zephyr._nets.mlp import mlp
 from zephyr._nets.norm import layer_norm
 from zephyr.building import initializers
@@ -96,8 +97,15 @@ def linear_transformer_block(
     num_heads: int,
     mlp_dim: int,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
-):
+    initializer: initializers.Initializer = initializers.initializer_base,
+) -> Array:
+    queries = linear_like(
+        params["initial_projection_queries"], queries, values, initializer=initializer
+    )
+    keys = linear_like(
+        params["initial_projection_keys"], keys, values, initializer=initializer
+    )
+    # values don't have to be projected since its embedding dimension was the reference
     z = multi_head_linear_attention(
         params["multi_head_linear_attention"],
         queries,
@@ -108,7 +116,9 @@ def linear_transformer_block(
         initializer,
     )
 
-    z = layer_norm(params["layer_norm"], z + queries, True, True, initializer)
+    z = layer_norm(
+        params["layer_norm"], z + queries, -1, True, True, initializer=initializer
+    )
     z = z + mlp(params["mlp"], z, [mlp_dim, queries.shape[-1]])
 
     return z
