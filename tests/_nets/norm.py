@@ -16,6 +16,9 @@ from zephyr.project_typing import Shape
     [
         (jnp.ones([8]), 0, (8,)),
         (jnp.ones([8, 16]), 1, (8, 16)),
+        (jnp.ones([8, 16, 32]), 1, (8, 16, 32)),
+        (jnp.ones([8, 16, 32]), -1, (8, 16, 32)),
+        (jnp.ones([8, 16, 32]), -2, (8, 16, 32)),
     ],
 )
 def test_layer_norm_shape(
@@ -31,6 +34,9 @@ def test_layer_norm_shape(
     [
         (jnp.ones([8]), 0, (8,)),
         (jnp.ones([8, 16]), 1, (8, 16)),
+        (jnp.ones([8, 16, 32]), 1, (8, 16, 32)),
+        (jnp.ones([8, 16, 32]), -1, (8, 16, 32)),
+        (jnp.ones([8, 16, 32]), -2, (8, 16, 32)),
     ],
 )
 def test_layer_norm_shape_no_offset_no_bool(
