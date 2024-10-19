@@ -18,7 +18,7 @@ def single_head_attention(
     values: Array,
     masks: Optional[Array] = None,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
+    initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
     keys = linear(params["linear_keys"], keys, keys.shape[-1], with_bias, initializer)
     queries = linear(
@@ -33,7 +33,7 @@ def single_head_attention(
     # values [... s v]
     # target [... p v]
 
-    scores = queries @ jnp.moveaxis(values, -1, -2)  # TODO apply mask
+    scores = queries @ jnp.moveaxis(keys, -1, -2)
     if masks:
         scores = apply_attention_mask(scores, masks)
     attention_map = nn.softmax(scores, axis=-1)
@@ -50,7 +50,7 @@ def multi_head_attention(
     num_heads: int,
     masks: Optional[Array] = None,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
+    initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
 
     queries = branch_linear(
