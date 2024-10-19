@@ -24,3 +24,26 @@ def test_layer_norm_shape(
     params = trace(layer_norm, random.PRNGKey(0), x, axis)
     z = layer_norm(params, x, axis)
     assert z.shape == expected_shape_after_apply
+
+
+@mark.parametrize(
+    ["x", "axis", "expected_shape_after_apply"],
+    [
+        (jnp.ones([8]), 0, (8,)),
+        (jnp.ones([8, 16]), 1, (8, 16)),
+    ],
+)
+def test_layer_norm_shape_no_offset_no_bool(
+    x: Array, axis: int, expected_shape_after_apply: Shape
+) -> None:
+    params = trace(layer_norm, random.PRNGKey(0), x, axis, False, False)
+    z = layer_norm(params, x, axis, False, False)
+
+    print(f"params {params}")
+
+    has_params = lambda p: len(p) >= 1
+
+    assert z.shape == expected_shape_after_apply
+    assert not has_params(
+        params
+    )  # because offset and scale should not be trained and is therefore a constant in their formulae
