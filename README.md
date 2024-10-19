@@ -1,7 +1,7 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-purple)
-![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a2-yellow)
+![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a3-yellow)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
@@ -113,7 +113,6 @@ encoding_of_flipped_encoder = flipped_encoder(params["encoder"], x, embed_dim, l
 As you can see, by being on the jax-level all the time, you are free to do whatever you want. Coding becomes short and to the point. 
 
 ### Tracing: trace function OR Tracer object
-(Unreleased: Will be released in the next version)
 Aside from using the trace function, another way you could have initialized `params` is using a `Tracer` object which would need a `key: KeyArray` (like all random things in JAX). 
 ```python
 from zephyr.building.tracing import Tracer
