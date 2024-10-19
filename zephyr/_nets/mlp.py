@@ -7,6 +7,7 @@ from jaxtyping import PyTree
 
 from zephyr.building import initializers
 from zephyr.building import template
+from zephyr.building.template import validate
 
 
 def linear(
@@ -17,13 +18,13 @@ def linear(
     initializer_weight: initializers.Initializer = initializers.initializer_base,
     initializer_bias: initializers.Initializer = initializers.zeros,
 ) -> Array:
-    params["weights"] == template.array((target_out, x.shape[-1]), initializer_weight)
+    validate(params["weights"], (target_out, x.shape[-1]), initializer_weight)
     z = jnp.expand_dims(x, axis=-1)
     z = params["weights"] @ z
     z = jnp.squeeze(z, axis=-1)
 
     if with_bias:
-        params["bias"] == template.array((target_out,), initializer_bias)
+        validate(params["bias"], (target_out,), initializer_bias)
         z = params["bias"] + z
 
     return z

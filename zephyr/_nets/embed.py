@@ -7,6 +7,7 @@ from jaxtyping import PyTree
 from zephyr.building import template
 from zephyr.building.initializers import Initializer
 from zephyr.building.initializers import initializer_base
+from zephyr.building.template import validate
 
 
 def token_embed(
@@ -18,12 +19,11 @@ def token_embed(
     initializer: Initializer = initializer_base,
 ) -> Array:
     if initial_embedding_matrix is not None:
-        params["token_embeddings"] == template.array(
+        validate(
+            params["token_embeddings"],
             (vocab_size, embed_dim),
             initializer=lambda key, shape: initial_embedding_matrix,
         )
     else:
-        params["token_embeddings"] == template.array(
-            (vocab_size, embed_dim), initializer
-        )
+        validate(params["token_embeddings"], (vocab_size, embed_dim), initializer)
     return jnp.asarray(params["token_embeddings"])[(x_token_ids,)]

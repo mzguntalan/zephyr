@@ -11,6 +11,7 @@ from zephyr._nets.mlp import linear
 from zephyr.building import initializers
 from zephyr.building import template
 from zephyr.building.initializers import Initializer
+from zephyr.building.template import validate
 from zephyr.masking import apply_attention_mask
 
 
@@ -31,13 +32,13 @@ def layer_norm(
 
     scale = jnp.array([1.0])
     if create_scale:
-        params["scale"] == template.array(shape, initializer)
+        validate(params["scale"], shape, initializer)
         scale = params["scale"]
     scale = jnp.broadcast_to(scale, x.shape)
 
     offset = jnp.array([0.0])
     if create_offset:
-        params["offset"] == template.array(shape, initializer)
+        validate(params["offset"], shape, initializer)
         offset = params["offset"]
     offset = jnp.broadcast_to(offset, x.shape)
 

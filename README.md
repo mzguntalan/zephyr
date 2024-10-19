@@ -139,32 +139,33 @@ params = trace(autoencoder, key, x, embed_dim, latent_dim)
 ### Building Layers From Scratch<a id="linear"></a>
 Usually it is rare that one would need to instantiate their own trainable weights (specifying the shape and initializer) since Linear / MLP layers usually suffice for that. Frameworks usually differ in how to handle parameter building and it is part of what makes the core
 experience in these frameworks. This part is also where clever things in each framework is hidden. For zephyr, it wanted to keep 
-functions pure, but parameter building is hard. To make it easier zephyr had to rely on python's quirkyness. 
+functions pure, but parameter building is hard, so that's what zephyr makes it easy.   
 
-Let's implement the linear layer from scratch.
+Let's implement the linear layer from scratch. A linear layer would needs `weights` and `biases`. We assume that we already have formed `params` and we just have to 
+validate to ensure that 1) it exists and 2) it is of the right shape (also an initializer can be supplied so that the tracer takes note if you use the tracer/trace).
+If you try to handcraft your own params, instead of using the `trace` function, this validate will tell you if there is a mismatch with what you created and what it expected.
 ```python
-from zephyr.building import initializers, template 
+from zephyr.building.initializers import initializer_base, Initializer
+from zephyr.building.template import validate
 
 def linear(
     params: PyTree,
     x: Array,
     target_out: int,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
+    initializer: Initializer=initializer_base,
 ) -> Array:
-    params["weights"] == template.array((target_out, x.shape[-1]), initializer)
+    validate(params["weights"], shape=(target_out, x.shape[-1]), initializer=initializer)
     z = jnp.expand_dims(x, axis=-1)
     z = params["weights"] @ z
     z = jnp.squeeze(z, axis=-1)
 
     if with_bias:
-        params["bias"] == template.array((target_out,), initializer)
+        validate(params["bias"], shape=(target_out,), initializer)
         z = params["bias"] + z
 
     return z
 ```
-The key part are where `params["name_of_params"]` is `==` to a template that contains the shape information and the initializer information. This tells the `trace` function how to initialize these weights. These statements also provide typing-like statement which tells you
-what template that parameter follows before using it. 
 
 And as seen, earlier, to use this, just use the `trace` function.
 
