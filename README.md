@@ -191,7 +191,7 @@ wants to be as easy as possible and will strive to always use at-inference-time 
 
 
 ## Installation<a id="installation"></a>
-Warning: still in the **alpha** version. Expect occasional bugs, especially when doing `trace`, please submit them to Issues.
+Warning: still in the **alpha** version. If you encounter bugs, please submit them to Issues and I'll try to fix them as soon as possible.
 
 ```bash
 pip install z-zephyr
