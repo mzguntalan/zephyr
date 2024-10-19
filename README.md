@@ -160,7 +160,7 @@ def linear(
     z = jnp.squeeze(z, axis=-1)
 
     if with_bias:
-        validate(params["bias"], shape=(target_out,), initializer)
+        validate(params["bias"], shape=(target_out,), initializer=initializer)
         z = params["bias"] + z
 
     return z
