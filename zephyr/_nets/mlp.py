@@ -1,3 +1,5 @@
+from typing import Callable
+
 from jax import nn
 from jax import numpy as jnp
 from jaxtyping import Array
@@ -12,8 +14,8 @@ def linear(
     x: Array,
     target_out: int,
     with_bias: bool = True,
-    initializer_weight=initializers.initializer_base,
-    initializer_bias=initializers.zeros,
+    initializer_weight: initializers.Initializer = initializers.initializer_base,
+    initializer_bias: initializers.Initializer = initializers.zeros,
 ) -> Array:
     params["weights"] == template.array((target_out, x.shape[-1]), initializer_weight)
     z = jnp.expand_dims(x, axis=-1)
@@ -32,7 +34,7 @@ def branch_linear(
     x: Array,
     num_branches: int,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
+    initializer: initializers.Initializer = initializers.initializer_base,
 ):
     """Branches the last dimension of `x` with each branch having the same dimension as the last dimension of `x`
 
@@ -53,7 +55,7 @@ def mlp(
     params: PyTree,
     x: Array,
     out_dims: list[int],
-    activation=nn.relu,
+    activation: Callable[[Array], Array] = nn.relu,
     activate_final: bool = False,
     initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
@@ -70,3 +72,18 @@ def mlp(
         x = activation(x)
 
     return x
+
+
+def linear_like(
+    params: PyTree,
+    array_to_be_projected_to_desired_shape: Array,
+    reference_array_with_desired_last_dimension: Array,
+    initializer: initializers.Initializer = initializers.initializer_base,
+) -> Array:
+    array_with_desired_shape = linear(
+        params,
+        array_to_be_projected_to_desired_shape,
+        reference_array_with_desired_last_dimension.shape[-1],
+    )
+
+    return array_with_desired_shape
