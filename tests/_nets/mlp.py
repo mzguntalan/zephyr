@@ -7,6 +7,7 @@ from pytest import mark
 
 from zephyr._nets.mlp import branch_linear
 from zephyr._nets.mlp import linear
+from zephyr._nets.mlp import linear_like
 from zephyr._nets.mlp import mlp
 from zephyr.building.tracing import trace
 from zephyr.project_typing import Shape
@@ -55,3 +56,17 @@ def test_mlp(x: Array, out_dims: list[int], expected_shape_after_apply: Shape) -
     params = trace(mlp, random.PRNGKey(0), x, out_dims)
     z = mlp(params, x, out_dims)
     assert z.shape == expected_shape_after_apply
+
+
+@mark.parametrize(
+    ["beginning_shape", "reference_shape"],
+    [((16, 9), (16, 64)), ((8, 25), (52)), ((16, 16), (16, 16))],
+)
+def test_linear_like(beginning_shape: Shape, reference_shape: Shape):
+    x = jnp.ones(beginning_shape)
+    y = jnp.ones(reference_shape)
+
+    params = trace(linear_like, random.PRNGKey(0), x, y)
+    projected_x = linear_like(params, x, y)
+
+    assert y.shape[-1] == projected_x.shape[-1]
