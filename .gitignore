@@ -163,3 +163,4 @@ cython_debug/
 
 playground/
 .virtual_documents/
+.trajectory.md
