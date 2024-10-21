@@ -17,7 +17,7 @@ shortage of frameworks/libraries that build on JAX to cater to neural net buildi
 
 
 zephyr focuses on 2 things:
-- **Parameter Creation**. The number one pain point for using jax for neural networks is the difficulty of the laborious and tedious process of creating the parameters
+- **Parameter Creation**. The number one pain point for using jax-numpy for neural networks is the difficulty of the laborious and tedious process of creating the parameters
 - **Simplicity**. Neural networks are pure functions, but none of the frameworks present neural network as such pure functions. They always treat a neural network as something extra which is why you would need some special methods or transforms or re-duplicated jax methods.
 
 ## Core Principle<a id="core"></a>
