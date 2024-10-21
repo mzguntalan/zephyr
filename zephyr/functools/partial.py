@@ -58,6 +58,7 @@ def make_aware_of_placeholders(f: FunctionToBeWrapped) -> InnerFunction:
         if is_with_placeholder:
             args_with_placeholders = args_possibly_with_placeholders
 
+            @make_aware_of_placeholders
             def almost_f(*missing_args: MissingParameters) -> Return:
                 missing_args_supply = iter(missing_args)
                 complete_args = []
