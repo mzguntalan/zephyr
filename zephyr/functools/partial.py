@@ -8,14 +8,21 @@ Notes:
     - hopefully: it helps create more readable code
 """
 
+from itertools import chain
 from typing import Any
 from typing import Callable
 from typing import ParamSpec
+from typing import Sequence
 from typing import TypeVar
 from typing import Union
 
 
-class Hole: ...
+class Hole:
+    def __init__(self, name: str = ""):
+        self._name = name
+
+
+hole = Hole()
 
 
 Parameters = ParamSpec("Parameters")
@@ -31,6 +38,7 @@ InnerFunction = Callable[
 def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
     def inner(
         *args_possibly_with_placeholders: Parameters,
+        **kwargs_possibly_with_placeholders: Parameters,
     ) -> Union[Return, Callable[MissingParameters, Return]]:
         """Example Usage
 
@@ -46,29 +54,49 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
         g(placeholder, y, placeholder)(x,y,z) # 6
         """
         is_with_placeholder = False
-        for arg in args_possibly_with_placeholders:
+        for arg in chain(
+            args_possibly_with_placeholders, kwargs_possibly_with_placeholders.values()
+        ):
             if type(arg) is Hole:
                 is_with_placeholder = True
                 break
 
         if not is_with_placeholder:
             complete_args = args_possibly_with_placeholders
-            # return the value
-            return f(*complete_args)
+            complete_kwargs = kwargs_possibly_with_placeholders
+            return f(*complete_args, **kwargs_possibly_with_placeholders)
         if is_with_placeholder:
-            args_with_placeholders = args_possibly_with_placeholders
 
             @hole_aware
-            def almost_f(*missing_args: MissingParameters) -> Return:
+            def almost_f(
+                *missing_args: MissingParameters,
+                **missing_kwargs_or_overwrites: MissingParameters,
+            ) -> Return:
+
                 missing_args_supply = iter(missing_args)
                 complete_args = []
-                for arg in args_with_placeholders:
+                for arg in args_possibly_with_placeholders:
                     if type(arg) is Hole:
                         complete_args.append(next(missing_args_supply))
                     else:
                         complete_args.append(arg)
-                return f(*complete_args)
+
+                complete_kwargs = (
+                    kwargs_possibly_with_placeholders | missing_kwargs_or_overwrites
+                )
+
+                if _contains_hole(complete_kwargs.values()):
+                    return almost_f(*complete_args, **complete_kwargs)
+
+                return f(*complete_args, **complete_kwargs)
 
             return almost_f
 
     return inner
+
+
+def _contains_hole(seq: Sequence):
+    for item in seq:
+        if type(item) is Hole:
+            return True
+    return False
