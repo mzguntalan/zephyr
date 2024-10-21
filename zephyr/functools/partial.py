@@ -42,7 +42,7 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
     ) -> Union[Return, Callable[MissingParameters, Return]]:
         """Example Usage
 
-        @make_aware_of_placeholders
+        @placeholder_aware
         def g(x,y,z): return x+y+z
 
         placeholder = Placeholder()
@@ -93,6 +93,12 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
             return almost_f
 
     return inner
+
+
+# aliases
+Placeholder = Hole
+placeholder = hole
+placeholder_aware = hole_aware
 
 
 def _contains_hole(seq: Sequence):
