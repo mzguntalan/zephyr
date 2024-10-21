@@ -9,8 +9,10 @@ from zephyr._nets.mlp import linear_like
 from zephyr._nets.mlp import mlp
 from zephyr._nets.norm import layer_norm
 from zephyr.building import initializers
+from zephyr.functools.partial import hole_aware
 
 
+@hole_aware
 def single_head_linear_attention(
     params: PyTree,
     queries: Array,
@@ -36,6 +38,7 @@ def single_head_linear_attention(
     return answers
 
 
+@hole_aware
 def multi_head_linear_attention(
     params: PyTree,
     queries,
@@ -89,6 +92,7 @@ def multi_head_linear_attention(
     return combined_heads
 
 
+@hole_aware
 def linear_transformer_block(
     params: PyTree,
     queries: Array,

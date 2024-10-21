@@ -8,8 +8,10 @@ from jaxtyping import PyTree
 from zephyr.building import initializers
 from zephyr.building import template
 from zephyr.building.template import validate
+from zephyr.functools.partial import hole_aware
 
 
+@hole_aware
 def linear(
     params: PyTree,
     x: Array,
@@ -30,6 +32,7 @@ def linear(
     return z
 
 
+@hole_aware
 def branch_linear(
     params: PyTree,
     x: Array,
@@ -52,6 +55,7 @@ def branch_linear(
     return z
 
 
+@hole_aware
 def mlp(
     params: PyTree,
     x: Array,
@@ -75,6 +79,7 @@ def mlp(
     return x
 
 
+@hole_aware
 def linear_like(
     params: PyTree,
     array_to_be_projected_to_desired_shape: Array,

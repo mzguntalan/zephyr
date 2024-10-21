@@ -8,9 +8,11 @@ from jaxtyping import PyTree
 from zephyr._nets.mlp import branch_linear
 from zephyr._nets.mlp import linear
 from zephyr.building import initializers
+from zephyr.functools.partial import hole_aware
 from zephyr.masking import apply_attention_mask
 
 
+@hole_aware
 def single_head_attention(
     params: PyTree,
     queries: Array,
@@ -42,6 +44,7 @@ def single_head_attention(
     return answers
 
 
+@hole_aware
 def multi_head_attention(
     params: PyTree,
     queries: Array,

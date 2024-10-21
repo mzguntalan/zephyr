@@ -8,8 +8,10 @@ from zephyr.building import template
 from zephyr.building.initializers import Initializer
 from zephyr.building.initializers import initializer_base
 from zephyr.building.template import validate
+from zephyr.functools.partial import hole_aware
 
 
+@hole_aware
 def token_embed(
     params: PyTree,
     x_token_ids: Array,

@@ -12,9 +12,11 @@ from zephyr.building import initializers
 from zephyr.building import template
 from zephyr.building.initializers import Initializer
 from zephyr.building.template import validate
+from zephyr.functools.partial import hole_aware
 from zephyr.masking import apply_attention_mask
 
 
+@hole_aware
 def layer_norm(
     params: PyTree,
     x: Array,
