@@ -15,7 +15,7 @@ from typing import TypeVar
 from typing import Union
 
 
-class Placeholder: ...
+class Hole: ...
 
 
 Parameters = ParamSpec("Parameters")
@@ -28,7 +28,7 @@ InnerFunction = Callable[
 ]
 
 
-def make_aware_of_placeholders(f: FunctionToBeWrapped) -> InnerFunction:
+def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
     def inner(
         *args_possibly_with_placeholders: Parameters,
     ) -> Union[Return, Callable[MissingParameters, Return]]:
@@ -47,7 +47,7 @@ def make_aware_of_placeholders(f: FunctionToBeWrapped) -> InnerFunction:
         """
         is_with_placeholder = False
         for arg in args_possibly_with_placeholders:
-            if type(arg) is Placeholder:
+            if type(arg) is Hole:
                 is_with_placeholder = True
                 break
 
@@ -58,12 +58,12 @@ def make_aware_of_placeholders(f: FunctionToBeWrapped) -> InnerFunction:
         if is_with_placeholder:
             args_with_placeholders = args_possibly_with_placeholders
 
-            @make_aware_of_placeholders
+            @hole_aware
             def almost_f(*missing_args: MissingParameters) -> Return:
                 missing_args_supply = iter(missing_args)
                 complete_args = []
                 for arg in args_with_placeholders:
-                    if type(arg) is Placeholder:
+                    if type(arg) is Hole:
                         complete_args.append(next(missing_args_supply))
                     else:
                         complete_args.append(arg)

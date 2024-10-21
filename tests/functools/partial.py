@@ -1,9 +1,9 @@
-from zephyr.functools.partial import make_aware_of_placeholders
+from zephyr.functools.partial import hole_aware
 from zephyr.functools.partial import Placeholder
 
 
 def test_make_aware_of_placeholders():
-    @make_aware_of_placeholders
+    @hole_aware
     def g(a, b, c, d):
         return a + b + c + d
 
@@ -20,7 +20,7 @@ def test_make_aware_of_placeholders():
 
 
 def test_make_aware_of_placeholders_nested():
-    @make_aware_of_placeholders
+    @hole_aware
     def g(a, b, c, d, e, f):
         return a + b + c + d + e + f
 
