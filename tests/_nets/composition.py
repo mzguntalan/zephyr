@@ -10,7 +10,7 @@ from zephyr._nets.mlp import branch_linear
 from zephyr._nets.mlp import mlp
 from zephyr._nets.norm import layer_norm
 from zephyr.building.tracing import trace
-from zephyr.functools.partial import hole as _
+from zephyr.functools.partial import placeholder_hole as _
 
 
 def test_sequential():

@@ -23,6 +23,7 @@ def test_array(shape: Shape) -> None:
 def test_validate(shape: Shape) -> None:
     params_skeleton = Skeleton()
     validate(params_skeleton, shape, initializer_base)
+    print("something", params_skeleton.materialize())
     assert params_skeleton.materialize().shape == shape
 
     params_with_correct_shape = jnp.ones(shape)
