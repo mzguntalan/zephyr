@@ -247,7 +247,7 @@ def deriving_holes(f: FunctionToBeWrapped) -> InnerFunction:
     return inner
 
 
-def _contains_placeholder_hole(seq: Sequence):
+def _contains_placeholder_hole(seq: Sequence[Any]) -> bool:
     for item in seq:
         if type(item) is PlaceholderHole:
             return True
