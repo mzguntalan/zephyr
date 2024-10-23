@@ -8,10 +8,12 @@ from jaxtyping import PyTree
 from zephyr.building import initializers
 from zephyr.building import template
 from zephyr.building.template import validate
+from zephyr.functools.partial import deriving_holes
 from zephyr.functools.partial import hole_aware
 
 
 @hole_aware
+@deriving_holes
 def linear(
     params: PyTree,
     x: Array,
@@ -33,6 +35,7 @@ def linear(
 
 
 @hole_aware
+@deriving_holes
 def branch_linear(
     params: PyTree,
     x: Array,
@@ -49,6 +52,11 @@ def branch_linear(
             z.shape == (..., num_branches, x.shape[-1])
 
     """
+    validate(
+        params,
+        expression=lambda params: params["weights"].shape[-2] // x.shape[-1]
+        == num_branches,
+    )
     z = linear(params, x, x.shape[-1] * num_branches)
     z = jnp.reshape(z, z.shape[:-1] + (num_branches, x.shape[-1]))
 
@@ -56,14 +64,20 @@ def branch_linear(
 
 
 @hole_aware
+@deriving_holes
 def mlp(
-    params: PyTree,
-    x: Array,
+    params,
+    x,
     out_dims: list[int],
-    activation: Callable[[Array], Array] = nn.relu,
+    activation=nn.relu,
     activate_final: bool = False,
     initializer: initializers.Initializer = initializers.initializer_base,
-) -> Array:
+):
+    validate(
+        params,
+        expression=lambda params: [params[i]["weights"].shape[-2] for i in params]
+        == out_dims,
+    )
     for i, target_out in enumerate(out_dims[:-1]):
         x = activation(linear(params[i], x, target_out, initializer_weight=initializer))
 
@@ -80,12 +94,22 @@ def mlp(
 
 
 @hole_aware
+@deriving_holes
 def linear_like(
     params: PyTree,
     array_to_be_projected_to_desired_shape: Array,
     reference_array_with_desired_last_dimension: Array,
     initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
+    validate(
+        params,
+        expression=lambda params: reference_array_with_desired_last_dimension
+        == jnp.ones(
+            # array_to_be_projected_to_desired_shape.shape[:-1]
+            # +
+            (params["weights"].shape[-2],),
+        ),
+    )
     array_with_desired_shape = linear(
         params,
         array_to_be_projected_to_desired_shape,

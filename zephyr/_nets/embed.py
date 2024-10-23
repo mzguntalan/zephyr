@@ -5,13 +5,15 @@ from jaxtyping import Array
 from jaxtyping import PyTree
 
 from zephyr.building import template
+from zephyr.building._template.validation import validate
 from zephyr.building.initializers import Initializer
 from zephyr.building.initializers import initializer_base
-from zephyr.building.template import validate
+from zephyr.functools.partial import deriving_holes
 from zephyr.functools.partial import hole_aware
 
 
 @hole_aware
+@deriving_holes
 def token_embed(
     params: PyTree,
     x_token_ids: Array,
@@ -25,6 +27,11 @@ def token_embed(
             params["token_embeddings"],
             (vocab_size, embed_dim),
             initializer=lambda key, shape: initial_embedding_matrix,
+        )
+        validate(
+            params,
+            expression=lambda params: params["token_embeddings"].shape
+            == (vocab_size, embed_dim),
         )
     else:
         validate(params["token_embeddings"], (vocab_size, embed_dim), initializer)
