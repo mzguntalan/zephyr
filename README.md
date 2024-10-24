@@ -9,7 +9,9 @@ NOTE: Work in progress; enough to demonstrate the core feature; very early stage
 Feature requests are very welcome, ask them in the Github Issues.
 
 
-[Summary](#summary) | [Core Principle](#core) | [Example: Autoencoder](#autoencoder) | [Example: Linear](#linear) | [Motivation and Inspiration](#motivation) | [Installation](#installation)
+[Summary](#summary) | [Core Principle](#core) 
+Examples: [Autoencoder](#autoencoder) | [Holes and Model Surgery](#FPTools) | [Linear](#linear) 
+[Motivation and Inspiration](#motivation) | [Installation](#installation)
 
 ## Summary<a id="summary"></a>
 The [JAX](https://github.com/jax-ml/jax) library offers most things that you need for making neural networks, but there is no 
@@ -38,7 +40,7 @@ def encoder(params, x, embed_dim, latent_dim):
     return x
 
 def decoder(params, x, embed_dim, original_dim):
-    x = mlp(params, x, [embed_dim, embed_dim, latent_dim])
+    x = mlp(params, x, [embed_dim, embed_dim, original_dim])
     return x
 
 def autoencoder(params, x, embed_dim, latent_dim):
@@ -99,15 +101,6 @@ some_reconstructions = decoder(params["decoder"], encodings, embed_dim, x.shape[
 
 # what if you want to just use the mlp_2 in encoder?
 mlp(params["encoder"]["mlp_2"], some_input, [embed_dim, latent_dim])
-
-# what if you want to be silly and make an encoder with mlp_1 and mlp_2 flipped and still use the encoder's weights?
-def flipped_encoder(params, x, embed_dim, latent_dim):
-    x = mlp(params["mlp_2"], x, [embed_dim, latent_dim])
-    x = mlp(params["mlp_1"], x, [embed_dim, embed_dim])
-    return x
-
-# and use the flipped_encoder trivially as this
-encoding_of_flipped_encoder = flipped_encoder(params["encoder"], x, embed_dim, latent_dim)
 ```
 
 As you can see, by being on the jax-level all the time, you are free to do whatever you want. Coding becomes short and to the point. 
@@ -133,6 +126,68 @@ params = tracer.materialize()
 
 # trace function
 params = trace(autoencoder, key, x, embed_dim, latent_dim)
+```
+
+### Experimental: Holes (Placeholder and Derivable) <a id="#FPTools"></a>
+Zephyr introduces the concept of a placeholder hole and a derivable hole. Each is an object of type PlaceholderHole and DerivableHole, respecetively. However, we do not need multiple instances of them and so they would be named `_` and `__`, respectively. 
+
+Holes make FP easier and eager-execution (op-by-op) mode easier. We'll use the example up above to show how holes can be useful.
+
+Two decorators that zephyr has are `@hole_aware` and `@deriving_holes` (should be applied in this order). These make functions respond to placeholder holes and derivable holes.
+
+```python
+from zephyr.nets import mlp
+from zephyr.functools.partal import hole_aware, deriving_holes, placeholder_hole as _, derivable_hole as __
+
+@hole_aware
+@deriving_holes
+def encoder(params, x, embed_dim, latent_dim):
+    x = mlp(params["mlp_1"], x, [embed_dim, embed_dim])
+    x = mlp(params["mlp_2"], x, [embed_dim, latent_dim])
+    return x
+
+@hole_aware
+@deriving_holes
+def decoder(params, x, embed_dim, original_dim):
+    x = mlp(params, x, [embed_dim, embed_dim, original_dim])
+    return x
+
+@hole_aware
+@deriving_holes
+def autoencoder(params, x, embed_dim, latent_dim):
+    encoding = encoder(params["encoder"], x, embed_dim, latent_dim)
+    reconstruction = decoder(params["decoder"], x, embed_dim, x.shape[-1])
+
+    return reconstruction
+```
+
+`jit`, by default, can only trace functions with Array arguments and specifyin arg_nums/arg_names may be inconvient. One way to get around this is using python's `functools.partial` function and partially-apply the non-Array arguments (usually hyperparameters). However, `partial` **does not provide function signature hints** and makes it hard. So instead of using partial, we can use placeholder holes and it auto-partializes the function. Let's partially-apply the hyperparameters to autoencoder.
+
+```python
+model = autoencoder(_, _, embed_dim, latent_dim) # model can be called as model(params, x) <- notice the holes and the order
+
+
+params = trace(model, key, x) # no hyperparameters needed since it's already known by the model
+
+```
+
+After tracing we can `jit` the model as `fast_model = jit(model)` and use it as normal : `fast_model(params, x)`.
+
+**Model Surgery**. This is where derivable holes come into play. Do note, that derivable holes are only useful for not jitted functions as deriving them is not a jit-friendly operation. A while ago, we had to supply hyperparameters to the model's inner layers, but now, we can use a derivable hole instead (if the hole cannot be derived, an IncompleteDerivationError will be raised). 
+
+```python
+# assume you are done training and params contained trained weights (use another library like optax for this)
+
+# what if you want to use just the encoder?
+encodings = encoder(params["encoder"], x, __, __)
+
+# what you want to use just the decoder?
+some_reconstructions = decoder(params["decoder"], encodings, __, __)
+
+# what if you want to just use the mlp_2 in encoder? you can do either of the following lines
+mlp(params["encoder"]["mlp_2"], some_input, [__, __]) # provide a template of the shape (this will check if the mlp had 2 layers, and return an error if not) 
+mlp(params["encoder"]["mlp_2"], some_input, __) #  make the whole output_dims argument a derivable hole
+mlp(params["encoder"]["mlp_2"], some_input, [__, initial_dim]) # you can even use holes to check!, it will raise an error if it sees inconsistencies 
 ```
 
 ### Building Layers From Scratch<a id="linear"></a>
