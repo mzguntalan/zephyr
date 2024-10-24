@@ -8,6 +8,8 @@ NOTE: Work in progress; enough to demonstrate the core feature; very early stage
 
 Feature requests are very welcome, ask them in the Github Issues.
 
+Currently working on: experimental features to help in model surgery
+
 
 [Summary](#summary) | [Core Principle](#core) 
 Examples: [Autoencoder](#autoencoder) | [Holes and Model Surgery](#FPTools) | [Linear](#linear) 
