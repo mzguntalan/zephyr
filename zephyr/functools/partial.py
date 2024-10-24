@@ -25,8 +25,10 @@ class Hole:
         self._value = Underived()
 
     def __eq__(self, anything_is_equal_to_this):
-        self._value = anything_is_equal_to_this
-        return True
+        if self.is_unset:
+            self._value = anything_is_equal_to_this
+            return True
+        return self._value == anything_is_equal_to_this
 
     @property
     def value(self):
@@ -127,20 +129,6 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
         *args_possibly_with_placeholders: Parameters,
         **kwargs_possibly_with_placeholders: Parameters,
     ) -> Union[Return, Callable[MissingParameters, Return]]:
-        """Example Usage: todo: this is outdated
-
-        @placeholder_aware
-        def g(x,y,z): return x+y+z
-
-        placeholder = Placeholder()
-
-        x,y,z = 1,2,3
-        g(x,y,z) # 6
-        g(placeholder, y, z)(x) # 6
-        g(x, placeholder, placeholder)(y,z) # 6
-        g(placeholder, y, placeholder)(x,y,z) # 6
-        """
-
         is_with_placeholder = False
         for arg in chain(
             args_possibly_with_placeholders, kwargs_possibly_with_placeholders.values()
@@ -153,32 +141,31 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
             complete_args = args_possibly_with_placeholders
             complete_kwargs = kwargs_possibly_with_placeholders
             return f(*complete_args, **kwargs_possibly_with_placeholders)
-        if is_with_placeholder:
 
-            @hole_aware
-            def almost_f(
-                *missing_args: MissingParameters,
-                **missing_kwargs_or_overwrites: MissingParameters,
-            ) -> Return:
+        @hole_aware
+        def almost_f(
+            *missing_args: MissingParameters,
+            **missing_kwargs_or_overwrites: MissingParameters,
+        ) -> Return:
 
-                missing_args_supply = iter(missing_args)
-                complete_args = []
-                for arg in args_possibly_with_placeholders:
-                    if type(arg) is PlaceholderHole:
-                        complete_args.append(next(missing_args_supply))
-                    else:
-                        complete_args.append(arg)
+            missing_args_supply = iter(missing_args)
+            complete_args = []
+            for arg in args_possibly_with_placeholders:
+                if type(arg) is PlaceholderHole:
+                    complete_args.append(next(missing_args_supply))
+                else:
+                    complete_args.append(arg)
 
-                complete_kwargs = (
-                    kwargs_possibly_with_placeholders | missing_kwargs_or_overwrites
-                )
+            complete_kwargs = (
+                kwargs_possibly_with_placeholders | missing_kwargs_or_overwrites
+            )
 
-                if _contains_placeholder_hole(complete_kwargs.values()):
-                    return almost_f(*complete_args, **complete_kwargs)
+            if _contains_placeholder_hole(complete_kwargs.values()):
+                return almost_f(*complete_args, **complete_kwargs)
 
-                return f(*complete_args, **complete_kwargs)
+            return f(*complete_args, **complete_kwargs)
 
-            return almost_f
+        return almost_f
 
     inner._original_function = f
     return inner
@@ -193,7 +180,7 @@ def deriving_holes(f: FunctionToBeWrapped) -> InnerFunction:
 
         for arg in args:
             if type(arg) is DerivableHole:
-                v = DerivableHole()
+                v = DerivableHole(noisy=arg._noisy)
                 new_args.append(v)
                 all_holes.append(v)
             else:
@@ -202,7 +189,7 @@ def deriving_holes(f: FunctionToBeWrapped) -> InnerFunction:
         for k in kwargs:
             v = kwargs[k]
             if type(v) is DerivableHole:
-                v = DerivableHole()
+                v = DerivableHole(noisy=v._noisy)
                 kwargs[k] = v
                 all_holes.append(v)
             else:
@@ -217,6 +204,7 @@ def deriving_holes(f: FunctionToBeWrapped) -> InnerFunction:
 
             report_args = []
             report_kwargs = {}
+
             report_terms = {True: "Derived", False: "Underived", -1: "Given"}
             is_complete = True
 
