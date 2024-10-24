@@ -130,7 +130,7 @@ params = tracer.materialize()
 params = trace(autoencoder, key, x, embed_dim, latent_dim)
 ```
 
-### Experimental: Holes (Placeholder and Derivable) <a id="#FPTools"></a>
+### Experimental: Holes (Placeholder and Derivable) <a id="FPTools"></a>
 Zephyr introduces the concept of a placeholder hole and a derivable hole. Each is an object of type PlaceholderHole and DerivableHole, respecetively. However, we do not need multiple instances of them and so they would be named `_` and `__`, respectively. 
 
 Holes make FP easier and eager-execution (op-by-op) mode easier. We'll use the example up above to show how holes can be useful.
