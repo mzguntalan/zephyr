@@ -11,9 +11,9 @@ Feature requests are very welcome, ask them in the Github Issues.
 Currently working on: experimental features to help in model surgery
 
 
-[Summary](#summary) | [Core Principle](#core) 
-Examples: [Autoencoder](#autoencoder) | [Holes and Model Surgery](#FPTools) | [Linear](#linear) 
-[Motivation and Inspiration](#motivation) | [Installation](#installation)
+- [Summary](#summary) | [Core Principle](#core) 
+- Examples: [Autoencoder](#autoencoder) | [Holes and Model Surgery](#FPTools) | [Linear](#linear) 
+- [Motivation and Inspiration](#motivation) | [Installation](#installation)
 
 ## Summary<a id="summary"></a>
 The [JAX](https://github.com/jax-ml/jax) library offers most things that you need for making neural networks, but there is no 
