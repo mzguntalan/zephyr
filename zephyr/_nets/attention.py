@@ -8,11 +8,14 @@ from jaxtyping import PyTree
 from zephyr._nets.mlp import branch_linear
 from zephyr._nets.mlp import linear
 from zephyr.building import initializers
+from zephyr.building.template import validate
+from zephyr.functools.partial import deriving_holes
 from zephyr.functools.partial import hole_aware
 from zephyr.masking import apply_attention_mask
 
 
 @hole_aware
+@deriving_holes
 def single_head_attention(
     params: PyTree,
     queries: Array,
@@ -45,6 +48,7 @@ def single_head_attention(
 
 
 @hole_aware
+@deriving_holes
 def multi_head_attention(
     params: PyTree,
     queries: Array,
@@ -55,7 +59,12 @@ def multi_head_attention(
     with_bias: bool = True,
     initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
-
+    validate(
+        params,
+        expression=lambda params: params["branch_linear_queries"]["weights"].shape[-2]
+        // queries.shape[-1]
+        == num_heads,
+    )
     queries = branch_linear(
         params["branch_linear_queries"], queries, num_heads, with_bias, initializer
     )

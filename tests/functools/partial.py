@@ -1,5 +1,5 @@
-from zephyr.functools.partial import Hole
 from zephyr.functools.partial import hole_aware
+from zephyr.functools.partial import PlaceholderHole
 
 
 def test_make_aware_of_placeholders():
@@ -10,7 +10,7 @@ def test_make_aware_of_placeholders():
     a, b, c, d = 1, -1, 2, 3
     total = a + b + c + d
 
-    _ = Hole()
+    _ = PlaceholderHole()
 
     assert g(a, b, c, d) == total
     assert g(_, b, c, d)(a) == total
@@ -27,7 +27,7 @@ def test_make_aware_of_placeholders_nested():
     a, b, c, d, e, f = 1, 2, 4, 8, 16, 32
 
     total = a + b + c + d + e + f
-    _ = Hole()
+    _ = PlaceholderHole()
 
     assert g(a, b, c, d, e, f) == total
     assert g(_, _, _, _, _, _)(a, b, c, d, e, f) == total
@@ -47,7 +47,7 @@ def test_hole_aware_args_and_kwargs():
     scale = 2
 
     total = a + b + c + d + e + f
-    _ = Hole()
+    _ = PlaceholderHole()
 
     assert g(a, b, c, d, e, f) == total
     assert g(a, b, c, d, e, f, offset=_, scale=_)(offset=0, scale=1) == total
