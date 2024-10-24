@@ -1,7 +1,7 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-purple)
-![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a3-yellow)
+![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a4-yellow)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
