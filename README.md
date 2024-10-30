@@ -58,7 +58,7 @@ def autoencoder(params, x, embed_dim, latent_dim):
     return reconstruction
 ```
 
-Notice that we named `params` whenever it was passed to the encoder mlp: `params["mlp_1]` and `params["mlp_2"]`.
+Notice that we named `params` whenever it was passed to the encoder mlp: `params["mlp_1"]` and `params["mlp_2"]`.
 These names are essential and is part of zephyr's design to allow maximum control over all parameters.
 
 Notice that an `mlp` is not some object, not some function passed to a transform, not a dataclass PyTree object, it is simply
@@ -228,7 +228,7 @@ def model(params, key, x, out_dims, dp, num_blocks):
 
     for i in range(num_blocks):
         key, subkey = random.split(key)
-        x = mlp_with_dropout(params[i], key, x, out_dims, dp)
+        x = mlp_with_dropout(params[i], subkey, x, out_dims, dp)
     return x
 
 ```
