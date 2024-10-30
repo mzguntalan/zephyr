@@ -1,10 +1,10 @@
 # zephyr
 
-![Work in Progress](https://img.shields.io/badge/work%20in%20progress-purple)
-![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a4-yellow)
+![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
+![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a5-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
-> New: [Fast way to split keys and more](#threading) and declartive syntax to chain networks together
+> New: [Fast way to split keys and more](#thread) and declartive syntax to chain networks together
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
 
