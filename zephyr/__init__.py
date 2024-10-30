@@ -4,5 +4,5 @@ A neural network library on top of JAX allowing for easy and fast neural network
 Early Stage
 """
 
-__version__ = "0.0.0a4"
+__version__ = "0.0.0a5"
 __author__ = "Marko Zolo Gozano Untalan"

@@ -1,14 +1,16 @@
 # zephyr
 
-![Work in Progress](https://img.shields.io/badge/work%20in%20progress-purple)
-![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a4-yellow)
+![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
+![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.0a5-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
+
+> New: [Fast way to split keys and more](#thread) and declartive syntax to chain networks together
 
 NOTE: Work in progress; enough to demonstrate the core feature; very early stage
 
 Feature requests are very welcome, ask them in the Github Issues.
 
-Currently working on: experimental features to help in model surgery
+Currently working on: experimental features to make writing code shorter, readable and declarative
 
 - [Summary](#summary) | [Core Principle](#core)
 - Examples: [Autoencoder](#autoencoder) | [Holes and Model Surgery](#FPTools) | [Chaining](#thread) | [Linear](#linear)

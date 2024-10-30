@@ -3,8 +3,8 @@ from setuptools import setup
 
 setup(
     name="z-zephyr",
-    version="0.0.0a4",
-    description="Zephyr is a neural network library on top of JAX allowing for easy and fast neural network designing, creation, and manipulation",
+    version="0.0.0a5",
+    description="Zephyr is a declarative neural network library on top of JAX allowing for easy and fast neural network designing, creation, and manipulation",
     url="https://github.com/mzguntalan/zephyr",
     author="Marko Zolo Gozano Untalan",
     author_email="mzguntalan@gmail.com",
