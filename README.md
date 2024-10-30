@@ -200,7 +200,7 @@ mlp(params["encoder"]["mlp_2"], some_input, __) #  make the whole output_dims ar
 mlp(params["encoder"]["mlp_2"], some_input, [__, initial_dim]) # you can even use holes to check!, it will raise an error if it sees inconsistencies
 ```
 
-### Experimental: Threading and Chaining <a href="thread"></a>
+### Experimental: Threading and Chaining <a id="thread"></a>
 
 Threading does not refer to the multi-threading of parallelization, but a metaphor for passing an argument through several function but on each function, the argument is split into 2 - one is passed to the current function and the other one goes through.
 
