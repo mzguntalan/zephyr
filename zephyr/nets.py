@@ -1,5 +1,6 @@
 from zephyr._nets.attention import multi_head_attention
 from zephyr._nets.attention import single_head_attention
+from zephyr._nets.dropout import dropout
 from zephyr._nets.embed import token_embed
 from zephyr._nets.linear_attention import linear_transformer_block
 from zephyr._nets.linear_attention import multi_head_linear_attention
