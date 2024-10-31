@@ -114,31 +114,6 @@ mlp(params["encoder"]["mlp_2"], some_input, [embed_dim, latent_dim])
 
 As you can see, by being on the jax-level all the time, you are free to do whatever you want. Coding becomes short and to the point.
 
-### Tracing: trace function OR Tracer object
-
-Aside from using the trace function, another way you could have initialized `params` is using a `Tracer` object which would need a `key: KeyArray` (like all random things in JAX).
-
-```python
-from zephyr.building.tracing import Tracer
-tracer = Tracer(key)
-_dummy_outputs = autoencoder(tracer, x, embed_dim, latent_dim)
-params = tracer.materialize() # this returns a working initialized params: PyTree
-```
-
-While it is longer than `trace`, it might be more intuitive for some.
-
-For completeness, here is a side by side of it. (`trace` is doing the same thing: it uses the `Tracer`)
-
-```python
-# tracer object
-tracer = Tracer(key)
-_dummy_outputs = autoencoder(tracer, x, embed_dim, latent_dim)
-params = tracer.materialize()
-
-# trace function
-params = trace(autoencoder, key, x, embed_dim, latent_dim)
-```
-
 ### Experimental: Holes (Placeholder and Derivable) <a id="FPTools"></a>
 
 Zephyr introduces the concept of a placeholder hole and a derivable hole. Each is an object of type PlaceholderHole and DerivableHole, respecetively. However, we do not need multiple instances of them and so they would be named `_` and `__`, respectively.
