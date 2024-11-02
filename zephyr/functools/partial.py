@@ -240,3 +240,7 @@ def _contains_placeholder_hole(seq: Sequence[Any]) -> bool:
         if type(item) is PlaceholderHole:
             return True
     return False
+
+
+def flexible(f):  # todo name might change
+    return hole_aware(deriving_holes(f))
