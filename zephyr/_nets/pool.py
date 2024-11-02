@@ -46,19 +46,19 @@ def avg_pool(
     sum_pool = reduce_window(x, 0.0, lax.add, window_shape, strides, padding)
     if padding == "VALID":
         return sum_pool / np.prod(window_shape)
-    else:
-        window_counter_shape = [
-            (v if w != 1 else 1) for (v, w) in zip(x.shape, window_shape)
-        ]
-        window_counts = lax.reduce_window(
-            jnp.ones(window_counter_shape, x.dtype),
-            0.0,
-            lax.add,
-            window_shape,
-            strides,
-            padding,
-        )
-        return sum_pool / window_counts
+
+    window_counter_shape = [
+        (v if w != 1 else 1) for (v, w) in zip(x.shape, window_shape)
+    ]
+    window_counts = lax.reduce_window(
+        jnp.ones(window_counter_shape, x.dtype),
+        0.0,
+        lax.add,
+        window_shape,
+        strides,
+        padding,
+    )
+    return sum_pool / window_counts
 
 
 def _to_shape_tuple(
