@@ -190,10 +190,10 @@ def deriving_holes(f: FunctionToBeWrapped) -> InnerFunction:
             v = kwargs[k]
             if type(v) is DerivableHole:
                 v = DerivableHole(noisy=v._noisy)
-                kwargs[k] = v
+                new_kwargs[k] = v
                 all_holes.append(v)
             else:
-                kwargs[k] = v
+                new_kwargs[k] = v
 
         try:
             return f(*new_args, **new_kwargs)
@@ -242,5 +242,15 @@ def _contains_placeholder_hole(seq: Sequence[Any]) -> bool:
     return False
 
 
-def flexible(f):  # todo name might change
-    return hole_aware(deriving_holes(f))
+# def flexible(f):  # todo name might change
+#     return hole_aware(deriving_holes(f))
+
+
+def flexible(f):
+    @wraps(f)
+    @hole_aware
+    @deriving_holes
+    def inner(*args, **kwargs):
+        return f(*args, **kwargs)
+
+    return inner
