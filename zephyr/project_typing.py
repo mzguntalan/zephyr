@@ -17,5 +17,7 @@ ActivationFunctionsWithKnownGain = Literal[
     "leaky_relu",
 ]
 
+PaddingPreset = Literal["SAME", "VALID", "CIRCULAR", "CAUSAL"]
+
 
 ArrayTemplate = Callable[[KeyArray], Array]
