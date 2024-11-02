@@ -9,6 +9,7 @@ import numpy as np
 from jax import nn
 from jax import numpy as jnp
 from jax.lax import conv_general_dilated as _conv_general_dilated
+from jax.lax import conv_transpose as _conv_transpose
 from jax.lax import ConvDimensionNumbers
 from jaxtyping import Array
 from jaxtyping import PyTree
@@ -72,7 +73,7 @@ def branch_linear(
 def conv_general(
     params: PyTree,
     x: Array,
-    num_spatial_dims: int,
+    num_spatial_axes: int,
     out_channels: int,
     kernel_shape: ShapeExpression,
     stride: ShapeExpression = 1,
@@ -88,19 +89,19 @@ def conv_general(
 ) -> Array:
     if data_format != "CHANNELS_LAST":
         raise NotImplementedError(f"`data_format` not supported")
-    kernel_shape = _to_shape_tuple(kernel_shape, num_spatial_dims)
+    kernel_shape = _to_shape_tuple(kernel_shape, num_spatial_axes)
     padding = padding if type(padding) is str else _to_padding_tuple(padding)
 
     stride, kernel_dilation, lhs_dilation = map(
-        lambda x: _to_shape_tuple(x, num_spatial_dims), [stride, rate, dilation]
+        lambda x: _to_shape_tuple(x, num_spatial_axes), [stride, rate, dilation]
     )
 
     dimension_numbers = _to_dimenstion_numbers(
-        num_spatial_dims, data_format == "CHANNELS_LAST", False
+        num_spatial_axes, data_format == "CHANNELS_LAST", False
     )
-    num_dims = len(x.shape)  # rename to num_axes
+    num_axes = len(x.shape)
 
-    uses_batches = num_dims != num_spatial_dims + 1
+    uses_batches = num_axes != num_spatial_axes + 1
     if not uses_batches:
         x = jnp.expand_dims(x, axis=0)
 
@@ -245,24 +246,186 @@ def conv_3d(
     )
 
 
+@flexible
+def conv_transpose_general(
+    params: PyTree,
+    x: Array,
+    num_spatial_axes: int,
+    out_channels: int,
+    kernel_shape: ShapeExpression,
+    stride: ShapeExpression = 1,
+    padding: PaddingPreset | Sequence[tuple[int, int]] = "SAME",
+    with_bias: bool = True,
+    mask: Array | None = None,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
+    feature_group_count: int = 1,
+    data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+) -> Array:
+    if data_format != "CHANNELS_LAST":
+        raise NotImplementedError(f"`data_format` not supported")
+    kernel_shape = _to_shape_tuple(kernel_shape, num_spatial_axes)
+    padding = (
+        padding
+        if type(padding) is str
+        else _to_padding_tuple(padding, num_spatial_axes)
+    )
+
+    stride = _to_shape_tuple(stride, num_spatial_axes)
+
+    dimension_numbers = _to_dimenstion_numbers(
+        num_spatial_axes, data_format == "CHANNELS_LAST", False
+    )
+    num_axes = len(x.shape)
+
+    uses_batches = num_axes != num_spatial_axes + 1
+    if not uses_batches:
+        x = jnp.expand_dims(x, axis=0)
+
+    if x.shape[-1] % feature_group_count != 0:
+        raise ValueError(
+            f"Inputs channels: {x.shape[-1]} should be divisible by `feature_group_count`:{feature_group_count}"
+        )
+
+    weights_shape = kernel_shape + (x.shape[-1] // feature_group_count, out_channels)
+    validate(params["weights"], weights_shape, weights_initializer)
+
+    if mask is not None:
+        params["weights"] = apply_mask(params["weights"], mask)
+
+    z = _conv_transpose(
+        x,
+        params["weights"],
+        strides=stride,
+        padding=padding,
+        dimension_numbers=dimension_numbers,
+    )
+
+    if with_bias:
+        validate(params["bias"], (out_channels,), bias_initializer)
+        bias = jnp.broadcast_to(params["bias"], z.shape)
+        z = z + bias
+
+    if not uses_batches:
+        z = jnp.squeeze(z, 0)
+
+    return z
+
+
+@flexible
+def conv_transpose_1d(
+    params: PyTree,
+    x: Array,
+    out_channels: int,
+    kernel_shape: ShapeExpression,
+    stride: ShapeExpression = 1,
+    padding: PaddingPreset | Sequence[tuple[int, int]] = "SAME",
+    with_bias: bool = True,
+    mask: Array | None = None,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
+    feature_group_count: int = 1,
+    data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+) -> Array:
+    return conv_transpose_general(
+        params,
+        x,
+        1,
+        out_channels,
+        kernel_shape,
+        stride,
+        padding,
+        with_bias,
+        mask,
+        weights_initializer,
+        bias_initializer,
+        feature_group_count,
+        data_format,
+    )
+
+
+@flexible
+def conv_transpose_2d(
+    params: PyTree,
+    x: Array,
+    out_channels: int,
+    kernel_shape: ShapeExpression,
+    stride: ShapeExpression = 1,
+    padding: PaddingPreset | Sequence[tuple[int, int]] = "SAME",
+    with_bias: bool = True,
+    mask: Array | None = None,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
+    feature_group_count: int = 1,
+    data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+) -> Array:
+    return conv_transpose_general(
+        params,
+        x,
+        2,
+        out_channels,
+        kernel_shape,
+        stride,
+        padding,
+        with_bias,
+        mask,
+        weights_initializer,
+        bias_initializer,
+        feature_group_count,
+        data_format,
+    )
+
+
+@flexible
+def conv_transpose_3d(
+    params: PyTree,
+    x: Array,
+    out_channels: int,
+    kernel_shape: ShapeExpression,
+    stride: ShapeExpression,
+    padding: PaddingPreset | Sequence[tuple[int, int]] = "SAME",
+    with_bias: bool = True,
+    mask: Array | None = None,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
+    feature_group_count: int = 1,
+    data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+) -> Array:
+    return conv_transpose_general(
+        params,
+        x,
+        3,
+        out_channels,
+        kernel_shape,
+        stride,
+        padding,
+        with_bias,
+        mask,
+        weights_initializer,
+        bias_initializer,
+        feature_group_count,
+        data_format,
+    )
+
+
 def _to_dimenstion_numbers(
-    num_spatial_dims: int, channels_last: bool, transpose: bool
+    num_spatial_axes: int, channels_last: bool, transpose: bool
 ) -> ConvDimensionNumbers:
-    num_dims = num_spatial_dims + 2
+    num_axes = num_spatial_axes + 2
     if channels_last:
-        spatial_dims = tuple(range(1, num_dims - 1))
-        image_dimension_numbers = (0, num_dims - 1) + spatial_dims
+        spatial_axes = tuple(range(1, num_axes - 1))
+        image_dimension_numbers = (0, num_axes - 1) + spatial_axes
     else:
-        spatial_dims = tuple(range(2, num_dims))
-        image_dimension_numbers = (0, 1) + spatial_dims
+        spatial_axes = tuple(range(2, num_axes))
+        image_dimension_numbers = (0, 1) + spatial_axes
 
     if transpose:
-        kernel_dimension_numbers = (num_dims - 2, num_dims - 1) + tuple(
-            range(num_dims - 2)
+        kernel_dimension_numbers = (num_axes - 2, num_axes - 1) + tuple(
+            range(num_axes - 2)
         )
     else:
-        kernel_dimension_numbers = (num_dims - 1, num_dims - 2) + tuple(
-            range(num_dims - 2)
+        kernel_dimension_numbers = (num_axes - 1, num_axes - 2) + tuple(
+            range(num_axes - 2)
         )
 
     return ConvDimensionNumbers(
@@ -273,14 +436,14 @@ def _to_dimenstion_numbers(
 
 
 def _to_padding_tuple(
-    padding: tuple[int, int], num_spatial_dims: int
+    padding: tuple[int, int], num_spatial_axes: int
 ) -> Sequence[tuple[int, int]] | tuple[tuple[int, int]]:
     if type(padding[0]) is int:
-        return (padding,) * num_spatial_dims
+        return (padding,) * num_spatial_axes
     elif len(padding) == 1:
-        return tuple(padding) * num_spatial_dims
+        return tuple(padding) * num_spatial_axes
     raise ValueError(
-        f"Padding {padding} must of length {num_spatial_dims} but got {len(padding)}"
+        f"Padding {padding} must of length {num_spatial_axes} but got {len(padding)}"
     )
 
 
