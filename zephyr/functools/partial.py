@@ -247,9 +247,9 @@ def _contains_placeholder_hole(seq: Sequence[Any]) -> bool:
 
 
 def flexible(f):
-    @wraps(f)
     @hole_aware
     @deriving_holes
+    @wraps(f)
     def inner(*args, **kwargs):
         return f(*args, **kwargs)
 
