@@ -70,6 +70,31 @@ def branch_linear(
 
 
 @flexible
+def linear_like(
+    params: PyTree,
+    array_to_be_projected_to_desired_shape: Array,
+    reference_array_with_desired_last_dimension: Array,
+    initializer: initializers.Initializer = initializers.initializer_base,
+) -> Array:
+    validate(
+        params,
+        expression=lambda params: reference_array_with_desired_last_dimension
+        == jnp.ones(
+            # array_to_be_projected_to_desired_shape.shape[:-1]
+            # +
+            (params["weights"].shape[-2],),
+        ),
+    )
+    array_with_desired_shape = linear(
+        params,
+        array_to_be_projected_to_desired_shape,
+        reference_array_with_desired_last_dimension.shape[-1],
+    )
+
+    return array_with_desired_shape
+
+
+@flexible
 def conv_general(
     params: PyTree,
     x: Array,
