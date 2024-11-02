@@ -68,7 +68,7 @@ We have an autoencoder, now how do we instatiate the model? As said before, no i
 `params`. This is easy with the `trace` function.
 
 ```python
-from zephyr.building.tracing import trace
+from zephyr import trace
 from jax import random
 
 batch_size = 8
@@ -177,8 +177,7 @@ def linear(
 ) -> Array:
     validate(params["weights"], shape=(target_out, x.shape[-1]), initializer=initializer)
     z = jnp.expand_dims(x, axis=-1)
-    z = params["weights"] @ z
-    z = jnp.squeeze(z, axis=-1)
+    z =  z @ params["weights"]
 
     if with_bias:
         validate(params["bias"], shape=(target_out,), initializer=initializer)
