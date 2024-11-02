@@ -20,6 +20,7 @@ from zephyr.functools.partial import flexible
 from zephyr.masking import apply_mask
 from zephyr.project_typing import PaddingPreset
 from zephyr.project_typing import Shape
+from zephyr.project_typing import ShapeExpression
 
 
 @flexible
@@ -65,9 +66,6 @@ def branch_linear(
     z = jnp.reshape(z, z.shape[:-1] + (num_branches, x.shape[-1]))
 
     return z
-
-
-ShapeExpression = Union[int, Sequence[int]]
 
 
 @flexible

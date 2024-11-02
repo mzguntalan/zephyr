@@ -1,6 +1,8 @@
 from typing import Callable
 from typing import Literal
 from typing import NewType
+from typing import Sequence
+from typing import Union
 
 from jaxtyping import Array
 
@@ -21,3 +23,5 @@ PaddingPreset = Literal["SAME", "VALID", "CIRCULAR", "CAUSAL"]
 
 
 ArrayTemplate = Callable[[KeyArray], Array]
+
+ShapeExpression = Union[int, Sequence[int]]
