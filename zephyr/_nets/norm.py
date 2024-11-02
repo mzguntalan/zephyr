@@ -6,8 +6,8 @@ from jax.lax import rsqrt
 from jaxtyping import Array
 from jaxtyping import PyTree
 
-from zephyr._nets.mlp import branch_linear
-from zephyr._nets.mlp import linear
+from zephyr._nets.linear import branch_linear
+from zephyr._nets.linear import linear
 from zephyr.building import initializers
 from zephyr.building import template
 from zephyr.building.initializers import Initializer

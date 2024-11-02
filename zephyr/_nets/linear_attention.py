@@ -3,9 +3,9 @@ from jax import numpy as jnp
 from jaxtyping import Array
 from jaxtyping import PyTree
 
-from zephyr._nets.mlp import branch_linear
-from zephyr._nets.mlp import linear
-from zephyr._nets.mlp import linear_like
+from zephyr._nets.linear import branch_linear
+from zephyr._nets.linear import linear
+from zephyr._nets.linear import linear_like
 from zephyr._nets.mlp import mlp
 from zephyr._nets.norm import layer_norm
 from zephyr.building import initializers
@@ -22,15 +22,33 @@ def single_head_linear_attention(
     keys: Array,
     values: Array,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
+    weights_initializer=initializers.initializer_base,
+    bias_initializer=initializers.initializer_base,
 ) -> Array:
     # queries, keys, values [... s|p, k|v]
     queries = linear(
-        params["linear_queries"], queries, queries.shape[-1], with_bias, initializer
+        params["linear_queries"],
+        queries,
+        queries.shape[-1],
+        with_bias,
+        weights_initializer,
+        bias_initializer,
     )
-    keys = linear(params["linear_keys"], keys, keys.shape[-1], with_bias, initializer)
+    keys = linear(
+        params["linear_keys"],
+        keys,
+        keys.shape[-1],
+        with_bias,
+        weights_initializer,
+        bias_initializer,
+    )
     values = linear(
-        params["linear_values"], values, values.shape[-1], with_bias, initializer
+        params["linear_values"],
+        values,
+        values.shape[-1],
+        with_bias,
+        weights_initializer,
+        bias_initializer,
     )
 
     scores = queries @ (jnp.moveaxis(keys, -2, -1) @ values)
@@ -50,7 +68,8 @@ def multi_head_linear_attention(
     values,
     num_heads: int,
     with_bias: bool = True,
-    initializer=initializers.initializer_base,
+    weights_initializer=initializers.initializer_base,
+    bias_initializer=initializers.initializer_base,
 ) -> Array:
     validate(
         params,
@@ -60,13 +79,28 @@ def multi_head_linear_attention(
     )
 
     queries = branch_linear(
-        params["branch_linear_queries"], queries, num_heads, with_bias, initializer
+        params["branch_linear_queries"],
+        queries,
+        num_heads,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
     )
     keys = branch_linear(
-        params["branch_linear_keys"], keys, num_heads, with_bias, initializer
+        params["branch_linear_keys"],
+        keys,
+        num_heads,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
     )
     values = branch_linear(
-        params["branch_linear_values"], values, num_heads, with_bias, initializer
+        params["branch_linear_values"],
+        values,
+        num_heads,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
     )
 
     # queries, keys, values [..., s, h, e]
@@ -82,7 +116,8 @@ def multi_head_linear_attention(
         keys,
         values,
         with_bias,
-        initializer,
+        weights_initializer,
+        bias_initializer,
     )  # [..., h, s, e]
 
     multi_head_answers = jnp.moveaxis(multi_head_answers, -2, -3)  # [..., s , h, e]
@@ -96,7 +131,8 @@ def multi_head_linear_attention(
         combined_heads,
         combined_heads.shape[-1] // num_heads,
         with_bias,
-        initializer,
+        weights_initializer,
+        bias_initializer,
     )
 
     return combined_heads
@@ -111,13 +147,24 @@ def linear_transformer_block(
     num_heads: int,
     mlp_dim: int,
     with_bias: bool = True,
-    initializer: initializers.Initializer = initializers.initializer_base,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
     queries = linear_like(
-        params["initial_projection_queries"], queries, values, initializer=initializer
+        params["initial_projection_queries"],
+        queries,
+        values,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
     )
     keys = linear_like(
-        params["initial_projection_keys"], keys, values, initializer=initializer
+        params["initial_projection_keys"],
+        keys,
+        values,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
     )
     # values don't have to be projected since its embedding dimension was the reference
     z = multi_head_linear_attention(
@@ -127,12 +174,20 @@ def linear_transformer_block(
         values,
         num_heads,
         with_bias,
-        initializer,
+        weights_initializer,
+        bias_initializer,
     )
 
     z = layer_norm(
         params["layer_norm"], z + queries, -1, True, True, initializer=initializer
     )
-    z = z + mlp(params["mlp"], z, [mlp_dim, queries.shape[-1]])
+    z = z + mlp(
+        params["mlp"],
+        z,
+        [mlp_dim, queries.shape[-1]],
+        with_bias,
+        weights_initializer,
+        bias_initializer,
+    )
 
     return z

@@ -47,7 +47,8 @@ def branch_linear(
     x: Array,
     num_branches: int,
     with_bias: bool = True,
-    initializer: initializers.Initializer = initializers.initializer_base,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
     """Branches the last dimension of `x` with each branch having the same dimension as the last dimension of `x`
 
@@ -63,7 +64,14 @@ def branch_linear(
         expression=lambda params: params["weights"].shape[-1] // x.shape[-1]
         == num_branches,
     )
-    z = linear(params, x, x.shape[-1] * num_branches)
+    z = linear(
+        params,
+        x,
+        x.shape[-1] * num_branches,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
+    )
     z = jnp.reshape(z, z.shape[:-1] + (num_branches, x.shape[-1]))
 
     return z
@@ -74,7 +82,9 @@ def linear_like(
     params: PyTree,
     array_to_be_projected_to_desired_shape: Array,
     reference_array_with_desired_last_dimension: Array,
-    initializer: initializers.Initializer = initializers.initializer_base,
+    use_bias: bool = True,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
 ) -> Array:
     validate(
         params,
@@ -89,6 +99,9 @@ def linear_like(
         params,
         array_to_be_projected_to_desired_shape,
         reference_array_with_desired_last_dimension.shape[-1],
+        use_bias,
+        weights_initializer,
+        bias_initializer,
     )
 
     return array_with_desired_shape
