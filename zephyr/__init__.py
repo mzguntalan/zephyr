@@ -4,5 +4,7 @@ A neural network library on top of JAX allowing for easy and fast neural network
 Early Stage
 """
 
+from zephyr.building.tracing import trace
+
 __version__ = "0.0.0a5"
 __author__ = "Marko Zolo Gozano Untalan"
