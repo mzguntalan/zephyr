@@ -21,7 +21,7 @@ Device = Any
 
 
 class Skeleton(Array):
-    def __init__(self, key: KeyArray = random.PRNGKey(0)):
+    def __init__(self, key: KeyArray):
         self._contents = {}
         self._key = key
 
@@ -52,7 +52,8 @@ class Skeleton(Array):
         if key in self._contents:
             return self._contents[key]
         else:
-            new_params = Skeleton()
+            self._key, new_key = random.split(self._key)
+            new_params = Skeleton(new_key)
             self._contents[key] = new_params
             return self._contents[key]
 
@@ -65,7 +66,7 @@ class Skeleton(Array):
             if array_equal(self._contents, array_template):
                 warn(
                     f"Warning: params has been set before with shape {self._contents.keywords['shape']} "
-                    "and being set now with a SAME shape {array_template.keywords['shape']}.\n\n"
+                    f"and being set now with a SAME shape {array_template.keywords['shape']}.\n\n"
                     "Please make sure that this is intentional.",
                     RuntimeWarning,
                 )  # still unsure, what to do.. what if the user just wants to validate twice ?
