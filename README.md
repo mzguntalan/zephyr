@@ -127,13 +127,11 @@ Let's implement a model with blocks of mlp with dropout normally.
 
 ```python
 from zephyr.nets import dropout
-from zephyr.functools.partial import hole_aware, deriving_holes, placeholder_hole as _
+from functools import partial
 
-@hole_aware
 def mlp_with_dropout(params, key, x, out_dims, drop_prob):
     return dropout(key, mlp(params, x, out_dims), drop_prob)
 
-@hole_aware
 def model(params, key, x, out_dims, dp, num_blocks):
     validate(params, expression=lambda params: len(params) == num_blocks)
 
@@ -147,10 +145,9 @@ def model(params, key, x, out_dims, dp, num_blocks):
 With threading and chaining:
 
 ```python
-@hole_aware
 def model(params, key, x, out_dims, dp, num_blocks):
     validate(params, expression=lambda params: len(params) == num_blocks)
-    blocks = [ mlp_with_dropout(_, _, _, out_dims, dp) for i range(num_blocks) ]
+    blocks = [ partial( mlp_with_dropout, out_dims=out_dims, dp=dp ) for i range(num_blocks) ]
     return chain(thread_key(thread_params(blocks, params), key) (x)
 ```
 
