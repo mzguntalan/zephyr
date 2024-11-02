@@ -14,12 +14,14 @@ from zephyr.functools.partial import flexible
 
 @flexible
 def mlp(
-    params,
-    x,
+    params: PyTree,
+    x: Array,
     out_dims: list[int],
     activation=nn.relu,
     activate_final: bool = False,
-    initializer: initializers.Initializer = initializers.initializer_base,
+    use_bias: bool = True,
+    weight_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
 ):
     validate(
         params,
@@ -27,13 +29,19 @@ def mlp(
         == out_dims,
     )
     for i, target_out in enumerate(out_dims[:-1]):
-        x = activation(linear(params[i], x, target_out, initializer_weight=initializer))
+        x = activation(
+            linear(
+                params[i], x, target_out, use_bias, weight_initializer, bias_initializer
+            )
+        )
 
     if len(out_dims[:-1]) == 0:
         i = 0
     else:
         i += 1
-    x = linear(params[i], x, out_dims[-1], initializer_weight=initializer)
+    x = linear(
+        params[i], x, out_dims[-1], use_bias, weight_initializer, bias_initializer
+    )
 
     if activate_final:
         x = activation(x)
