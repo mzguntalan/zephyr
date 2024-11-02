@@ -1,5 +1,6 @@
 from typing import Optional
 
+import numpy as np
 from jax import nn
 from jax import numpy as jnp
 from jaxtyping import Array
@@ -38,7 +39,7 @@ def single_head_attention(
     # values [... s v]
     # target [... p v]
 
-    scores = queries @ jnp.moveaxis(keys, -1, -2)
+    scores = queries @ jnp.moveaxis(keys, -1, -2) / np.sqrt(keys.shape[-1])
     if masks:
         scores = apply_attention_mask(scores, masks)
     attention_map = nn.softmax(scores, axis=-1)
