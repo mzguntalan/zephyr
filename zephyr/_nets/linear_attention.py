@@ -178,9 +178,7 @@ def linear_transformer_block(
         bias_initializer,
     )
 
-    z = layer_norm(
-        params["layer_norm"], z + queries, -1, True, True, initializer=initializer
-    )
+    z = layer_norm(params["layer_norm"], z + queries, -1, True, True)
     z = z + mlp(
         params["mlp"],
         z,
