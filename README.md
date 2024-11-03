@@ -1,7 +1,7 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
-![Version 0.0.3](https://img.shields.io/badge/version-0.0.3-green)
+![Version 0.0.4](https://img.shields.io/badge/version-0.0.4-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 > New: **Common networks and layers** such as Linear, MLP, Convolution, Attention, etc. are here.
