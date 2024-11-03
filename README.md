@@ -1,7 +1,7 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
-![Version 0.0.0a2](https://img.shields.io/badge/version-0.0.1-green)
+![Version 0.0.2](https://img.shields.io/badge/version-0.0.2-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 > New: **Common networks and layers** such as Linear, MLP, Convolution, Attention, etc. are here.
@@ -207,7 +207,6 @@ inference to happen after the first pass of inputs, PyTorch (before the Lazy Mod
 wants to be as easy as possible and will strive to always use at-inference-time shape-inference and use relative axis positions whenever possible.
 
 ## Installation<a id="installation"></a>
-
 
 ```bash
 pip install z-zephyr --upgrade
