@@ -24,7 +24,8 @@ def layer_norm(
     create_scale: bool = True,
     create_offset: bool = True,
     eps: float = 1e-16,
-    initializer: Initializer = initializers.initializer_base,
+    scale_initializer: Initializer = initializers.ones,
+    offset_initializer: Initializer = initializers.zeros,
 ) -> Array:
     mean = jnp.mean(x, axis=axis, keepdims=True)
     variance = jnp.var(x, axis=axis, keepdims=True)
@@ -34,13 +35,13 @@ def layer_norm(
 
     scale = jnp.array([1.0])
     if create_scale:
-        validate(params["scale"], shape, initializer)
+        validate(params["scale"], shape, scale_initializer)
         scale = params["scale"]
     scale = jnp.broadcast_to(scale, x.shape)
 
     offset = jnp.array([0.0])
     if create_offset:
-        validate(params["offset"], shape, initializer)
+        validate(params["offset"], shape, offset_initializer)
         offset = params["offset"]
     offset = jnp.broadcast_to(offset, x.shape)
 
