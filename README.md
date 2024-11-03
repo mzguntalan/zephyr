@@ -6,11 +6,9 @@
 
 > New: **Common networks and layers** such as Linear, MLP, Convolution, Attention, etc. are here.
 
-NOTE: Work in progress; enough to demonstrate the core feature; very early stage
+NOTE: Work in progress; Feature requests are very welcome;
 
-Feature requests are very welcome, ask them in the Github Issues.
-
-Currently working on: experimental features to make writing code shorter, readable and declarative
+Currently working on: core networks and layers
 
 - [Summary](#summary) | [Core Principle](#core)
 - Examples: [Autoencoder](#autoencoder) | [Chaining](#thread) | [Linear](#linear)
@@ -210,7 +208,6 @@ wants to be as easy as possible and will strive to always use at-inference-time 
 
 ## Installation<a id="installation"></a>
 
-Warning: still in the **alpha** version. If you encounter bugs, please submit them to Issues and I'll try to fix them as soon as possible.
 
 ```bash
 pip install z-zephyr --upgrade
@@ -224,3 +221,7 @@ Major Features:
 - common initializers (kaiming and glorot)
 - utilities for FP in python, jax and zephyr (useful, but not needed)
   - placeholders instead of partial application for more readability
+
+### Final Note
+
+If you encounter bugs, please submit them to Issues and I'll try to fix them as soon as possible.
