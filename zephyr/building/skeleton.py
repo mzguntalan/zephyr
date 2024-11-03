@@ -49,6 +49,7 @@ class Skeleton(Array):
         return self.materialize()
 
     def __getitem__(self, key):
+        key = str(key)
         if key in self._contents:
             return self._contents[key]
         else:
