@@ -1,4 +1,7 @@
+"""TODO: Decide if these should go in _nets: they are increasingly useful in creation of nets"""
+
 from functools import partial
+from functools import wraps
 from typing import Any
 from typing import Callable
 from typing import Sequence
@@ -6,7 +9,10 @@ from typing import Sequence
 from jax import random
 from jaxtyping import Array
 
+from zephyr.functools.partial import flexible
 
+
+@flexible
 def thread(
     functions: Sequence[Callable], t: Any, split_rule: Callable = lambda x, i: x
 ) -> Sequence[Callable]:
@@ -21,6 +27,7 @@ def thread(
     return threaded_functions
 
 
+@flexible
 def chain(functions: Sequence[Callable]) -> Callable:
     def f(x):
         for fn in functions:
@@ -31,16 +38,28 @@ def chain(functions: Sequence[Callable]) -> Callable:
     return f
 
 
+@flexible
 def params_split(params, i):
     return params[i], params[i + 1]
 
 
+@flexible
 def key_split(key, i):
     return random.split(key)
 
 
+@flexible
 def identity_split(x, i):
     return x
+
+
+@flexible
+def skip(f):
+    @wraps(f)
+    def inner(x):
+        return x + f(x)
+
+    return inner
 
 
 thread_params = partial(thread, split_rule=params_split)

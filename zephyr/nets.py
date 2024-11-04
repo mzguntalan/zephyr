@@ -22,3 +22,4 @@ from zephyr._nets.norm import layer_norm
 from zephyr._nets.pool import avg_pool
 from zephyr._nets.pool import max_pool
 from zephyr.functools.composition import chain
+from zephyr.functools.composition import skip
