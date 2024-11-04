@@ -10,9 +10,9 @@ learning curve.
 
 **For those coming from other frameworks**: The main difference is that zephyr is oriented towards writing in an FP-style.
 No initialization of models is needed because models or nets are just regular functions - no need for separate init/build/construct
-and a call/forward; just one call that includes everything.
+and a call/forward.
 
-**For new to deep learning**: As seen in many textbooks or materials, a neural network $M$ is a function that takes in parameters $\theta$, data or input $X$
+**For those new to deep learning**: As seen in many textbooks or materials, a neural network $M$ is a function that takes in parameters $\theta$, data or input $X$
 and hyper-parameters $\alpha$ and produces an output $y$. Symbolically, it is $y = M(\theta, X, \alpha)$.
 
 ## Overview
