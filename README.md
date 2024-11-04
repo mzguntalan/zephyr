@@ -17,7 +17,7 @@ and hyper-parameters $\alpha$ and produces an output $y$. Symbolically, it is $y
 
 ## Overview
 
-Zephyr, at the core, is just the `trace` and `validate` function with extra utilities. `trsce` gives you parameters. `validate` checks expressions related to parameters.
+Zephyr, at the core, are just the `trace` and `validate` functions with extra utilities. `trace` gives you parameters. `validate` checks expressions related to parameters.
 
 The main mindset in writing zephyr is to think in FP and declarative-manner. Think of composable transformations instead of methods - transformations of both
 data or arrays AND functions. The examples below, will progressively re-write procedural/imperative-oriented code to the use of function transformations.
