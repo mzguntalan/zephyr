@@ -197,6 +197,7 @@ because they have to be specified somewhere for zephyr to trace it. Nevertheless
 To use it, we simply use the `trace` function and use normally as follows.
 
 ```python
+key = random.PRNGKey(0)
 model = linear(_,_, 256)
 params = trace(model, key, x)
 model(params, x) # use it like this
