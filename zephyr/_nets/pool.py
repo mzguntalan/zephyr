@@ -12,6 +12,7 @@ from zephyr.project_typing import PaddingPreset
 from zephyr.project_typing import ShapeExpression
 
 
+@flexible
 def max_pool(
     x: Array,
     window_shape: ShapeExpression,
@@ -29,6 +30,7 @@ def max_pool(
     return reduce_window(x, -jnp.inf, lax.max, window_shape, strides, padding)
 
 
+@flexible
 def avg_pool(
     x: Array,
     window_shape: ShapeExpression,
