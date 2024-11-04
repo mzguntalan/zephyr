@@ -8,7 +8,7 @@ Zephyr is a new FP-oriented neural network library/framework on top of JAX that 
 you write short, simple, declarative neural networks quickly and easily with minimal
 learning curve.
 
-**For those coming from other frameworks**: The main difference is that this oriented towards writing in an FP-style.
+**For those coming from other frameworks**: The main difference is that zephyr is oriented towards writing in an FP-style.
 No initialization of models is needed because models or nets are just regular functions - no need for separate init/build/construct
 and a call/forward; just one call that includes everything.
 
@@ -148,6 +148,49 @@ sample_outputs = fast_model(params, x) # b 8
 ```
 
 For model surgery or study: if you wanted to use just the enoder, then you can do `z = encoder(params["encoder"], x)`. You can do the same with any function/layer.
+
+### Examples: Making your own parameters
+
+To illustrate this, we will make our own `linear` layer using zephyr. In line with the declarative thinking, we specify what the shape of the paramters would look like -
+Ideally, we can put this in the type annotation, but that's ignored by Python, so we instead use zephyr's `valudate` as an alternative. One main use of `validate` is
+to specify parameter shape, initializer, and other relationships it might have with hyperparameters.
+
+```python
+@flexible
+def linear(params, x, out_target):
+    validate(params["weights"], (x.shape[-1], out_target))
+    validate(params["bias"], (out_target,))
+    x = x @ params["weights"] + params["bias"]
+    return x
+```
+
+As said, earlier we wil show rewrites which is up to you. This is just to show what is possible. There is a way to write this in way that resembles the pattern of
+other FP languages where they assume some variables exist and give it to you with a `where` keyword, similar to math statements.
+
+```python
+@flexible
+def linear(params, x, out_target):
+    return (lambda w, b: x @ w + b)(
+        validate(params["weights"], (x.shape[-1], out_target)),
+        validate(params["bias"], (out_target,)),
+
+    )
+```
+
+Notice the use of `validate` here. `validate` is actually just a way to enfore "type annotations" (albeit dependent types because we're really specifying shapes)
+because they have to be specified somewhere for zephyr to trace it. Nevertheless, `validate` acts like the identity function and returns its first parameter unchanged.
+
+To use it, we simply use the `trace` function and use normally as follows.
+
+```python
+model = linear(_,_, 256)
+params = trace(model, key, x)
+model(params, x) # use it like this
+
+# or jit it
+fast_model = jit(model)
+fast_model(params, x)
+```
 
 # Ignore below, readme under construction
 
