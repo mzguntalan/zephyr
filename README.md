@@ -4,6 +4,120 @@
 ![Version 0.0.4](https://img.shields.io/badge/version-0.0.4-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
+Zephyr is a new FP-oriented neural network library/framework on top of JAX that helps
+you write short, simple, declarative neural networks quickly and easily with minimal
+learning curve.
+
+**For those coming from other frameworks**: The main difference is that this oriented towards writing in an FP-style.
+No initialization of models is needed because models or nets are just regular functions - no need for separate init/build/construct
+and a call/forward; just one call that includes everything.
+
+**For new to deep learning**: As seen in many textbooks or materials, a neural network $M$ is a function that takes in parameters $\theta$, data or input $X$
+and hyper-parameters $\alpha$ and produces an output $y$. Symbolically, it is $y = M(\theta, X, \alpha)$.
+
+## Overview
+
+This overview tries to cover everything briefly one example. Before that, a few things.
+
+- `params`: The parameters of a model is contained in a dictionary PyTree with Array leaves patterned after Haiku
+- `_`: is an alias for a placeholder*holder which is a zephyr construct to make partializing a function easier. A `*` hole simply leaves that parameter empty and is passed later. (Same as python partial in functools)
+
+When writing neural nets with zephyr, you should think declaratively - you just assume that you already have the `params` built-in and you can access with any key you like (e.g. `params["some_name"]`.
+
+Here is a random model with comments to show the shapes of $x$ as it passes throught the layers (it is ommited when obvious).
+
+```python
+from zephyr import nets
+from zephyr.functools.partial import placeholder_hole as _
+from jax import numpy as jnp
+
+def model(params, x):
+    x = nets.mlp(params["mlp"][0], x, [256, 256]) # b 256
+    x nn.relu(x) # mlp does not activate the last layer by default
+    x = nets.mlp(params["mlp"][1], x, [256, 256])
+    x = nets.relu(x)
+    x = nets.layer_norm(params["ln"][0], x, -1)
+    x = nets.mlp(params["mlp"][2], x, [256, 256]) # b 256
+    x = nets.branch_linear(["br"][0], x, 64) # b 64 256
+    x = nets.conv_1d(params["conv1d"][0], x, 64, 5) # b 64 64
+    x = nn.relu(x)
+    x = nets.layer_norm(params["ln"][1], x, -1)
+    x = nets.conv_1d(params["conv1d"][1], x, 64, 5) # b 64 64
+    x = nn.relu(x)
+    x = nets.max_pool(x, (3,3), 2) # b 32 32
+    x = jnp.reshape(x, [x.shape[0], -1]) # b 1024
+    x = nets.layer_norm(params["ln"][2], x, -1)
+    x = nets.branch_linear(params["br"][1], x, 64) # b 64 1024
+    for i in range (3):
+        x = nets.multi_head_self_attention(params["mha"][i], x, 8) # b 64 1024
+        x = nets.mlp(params["attn_mlp"][i], x, [64, x.shape[-1]]) # b 64 1024
+        x = nets.layer_norm(params["attn_ln"][i], x, -1)
+    x = jnp.reshape(x, [x.shape[0], -1]) # b (64 * 1024) = b 65536
+    x = nets.linear(params["mlp_final"], x, 8) # b 8
+    x = nn.sigmoid(x) # b 8
+    return x
+```
+
+Of course, this model isn't something you would use, but it shows most of zephyr. Like, with other frameworks, a simple step-by-step process like this can be gathered
+with a `chain` with zephyr as follows. Notice the use of `_`: placeholder_hole which stands in for `x` until it is passed. `chain` is used like this `chain(sequence_of_layers)(x)`. Below is how we would re-write the previous model.
+
+```python
+from zephyr.functools.partial import placeholder_hole as _
+from zephyr.nets import chain
+from jax import numpy as jnp
+
+def model(params, x):
+    return chain([
+        nets.mlp(params["mlp"][0], _, [256,256]), nn.relu,
+        nets.mlp(params["mlp"][1], _, [256,256]), nn.relu,
+        nets.layer_norm(params["ln"][0], _, -1),
+        nets.mlp(params["mlp"][2], _, [256,256]), nn.relu,
+        nets.branch_linear(params["br"][0], _, 64),
+        nets.conv_1d(params["conv1d"][0], _, 64, 5), nn.relu,
+        nets.layer_norm(params["ln"][1], _, -1),
+        nets.conv_1d(params["conv1d"][1], _, 64, 5), nn.relu,
+        nets.max_pool(_, (3,3), 2),
+        lambda x: jnp.reshape(x, [x.shape[0], -1]),
+        nets.layer_norm(params["ln"][2], _, -1),
+        nets.branch_linear(params["br"][1], _, 64),
+        *[
+            chain([nets.multi_head_self_attention(params["mha"][i], _, 8),
+            lambda x: nets.mlp(params["attn_mlp"][i], x, [64, x.shape[-1]]), nn.relu,
+            nets.layer_norm(params["attn_ln"][i], _, -1)])
+            for i in range(3)
+
+        ],
+        lambda x: jnp.reshape(x, [x.shape[0], -1]),
+        nets.linear(params["mlp_final"], _, 8),
+        nn.sigmoid,
+    ])(x)
+```
+
+To use the model, is simple, we construct the `params` which is easy! We use the `trace` from zephyr. We use the model just by a normal
+function call `model(params, x)`.
+
+```python
+from zephyr import trace
+from jax import random, jit
+
+key = random.PRNGKey(0) # needed to randomly initialize weights
+x = jnp.ones([64, 8]) # sample input batch:w
+
+
+params = trace(model, key)
+
+fast_model = jit(model) # tracing of `trace` cannot trace a jit-ed function, please use the non-jit-ed version when tracing
+sample_outputs = fast_model(params, x) # b 8
+```
+
+Ignore below, readme under construction
+
+## Current Gotchas
+
+1. Documentation Strings are sparse
+2. JIT Gotchas
+3. Bugs
+
 > New: **Common networks and layers** such as Linear, MLP, Convolution, Attention, etc. are here.
 
 NOTE: Work in progress; Feature requests are very welcome;
