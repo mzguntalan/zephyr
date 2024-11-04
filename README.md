@@ -1,7 +1,7 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
-![Version 0.0.4](https://img.shields.io/badge/version-0.0.4-green)
+![Version 0.0.5](https://img.shields.io/badge/version-0.0.5-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 Zephyr is a new FP-oriented neural network library/framework on top of JAX that helps
