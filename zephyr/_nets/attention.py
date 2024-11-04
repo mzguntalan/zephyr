@@ -10,13 +10,11 @@ from zephyr._nets.linear import branch_linear
 from zephyr._nets.linear import linear
 from zephyr.building import initializers
 from zephyr.building.template import validate
-from zephyr.functools.partial import deriving_holes
-from zephyr.functools.partial import hole_aware
+from zephyr.functools.partial import flexible
 from zephyr.masking import apply_attention_mask
 
 
-@hole_aware
-@deriving_holes
+@flexible
 def single_head_attention(
     params: PyTree,
     queries: Array,
@@ -66,8 +64,7 @@ def single_head_attention(
     return answers
 
 
-@hole_aware
-@deriving_holes
+@flexible
 def multi_head_attention(
     params: PyTree,
     queries: Array,
@@ -124,7 +121,8 @@ def multi_head_attention(
         values,
         masks,
         with_bias,
-        initializer,
+        weights_initializer,
+        bias_initializer,
     )  # [..., h, s, e]
 
     multi_head_answers = jnp.moveaxis(multi_head_answers, -2, -3)  # [..., s , h, e]
@@ -143,3 +141,26 @@ def multi_head_attention(
     )
 
     return combined_heads
+
+
+@flexible
+def multi_head_self_attention(
+    params: PyTree,
+    x: Array,
+    num_heads: int,
+    masks: Optional[Array] = None,
+    with_bias: bool = True,
+    weights_initializer: initializers.Initializer = initializers.initializer_base,
+    bias_initializer: initializers.Initializer = initializers.initializer_base,
+) -> Array:
+    return multi_head_attention(
+        params,
+        x,
+        x,
+        x,
+        num_heads,
+        masks,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
+    )
