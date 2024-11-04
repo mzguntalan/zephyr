@@ -1,4 +1,5 @@
 from zephyr._nets.attention import multi_head_attention
+from zephyr._nets.attention import multi_head_self_attention
 from zephyr._nets.attention import single_head_attention
 from zephyr._nets.dropout import dropout
 from zephyr._nets.embed import token_embed
@@ -20,3 +21,4 @@ from zephyr._nets.mlp import mlp
 from zephyr._nets.norm import layer_norm
 from zephyr._nets.pool import avg_pool
 from zephyr._nets.pool import max_pool
+from zephyr.functools.composition import chain
