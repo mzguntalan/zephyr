@@ -30,13 +30,16 @@ Look at the Following Examples
 
 0. Imports: Common Gateway for Imports
 1. Encoder and Decoder: This example will show you some of the layers in `zephyr.nets`. We use zephyr's `chain` function to chain functions(neural networks) together.
+2. Parameter Creation: This example will show you how to use custom parameters in your functions/nets.
+3. Dealing with random keys: This example will show you that keys are just Arrays and part of your input. Nevertheless, there are some zephyr utilities you could use
+   to transform functions in ways that are useful for dealing with keys.
 
 ### Imports
 
 ```python
-from jax import numpy as jnp, random, jit
+from jax import numpy as jnp, random, jit, nn
 from zephyr import nets, trace
-from zephyer.nets import chain
+from zephyr.nets import chain
 from zephyr.functools.partial import placeholder_hole as _, flexible
 ```
 
@@ -190,6 +193,69 @@ model(params, x) # use it like this
 # or jit it
 fast_model = jit(model)
 fast_model(params, x)
+```
+
+### Dealing with random keys
+
+Random keys or RNGs are somewhat an unfamiliar concept usually, since in FP you have to be explicit with these. So when you try to get rid of it using OO then
+it tends to stick out like a sore thumb at the end. In zephyr, we embrace this and treat key as you would anything - it is just input to data.
+
+Here a simple model using dropout.
+
+```python
+def model(params, x, key):
+    for i in range(3):
+        x = nets.mlp(params["mlp"][i], x, [256, 256])
+        key, subkey = random.split(key)
+        x = nets.dropout(subkey, x, 0.2)
+    x = nn.sigmoid(x)
+    return x
+```
+
+As with previous examples, we offer rewrites of this, none of which are "more elegent". Choose the one that best suits you.
+
+Zephyr has a `thread` function with specific variants such as `thread_key`, `thread_params`, and `thread_identity` which should be enough for most cases.
+
+Here is the same model but using the `thread_key` function to "thread" the `key` to multiple `dropouts` (this could be any function with a key as a first parameter).
+
+```python
+def model(params, x, key):
+    dropouts = thread_key([nets.dropout(_, _, 0.2) for i in range(3)], key) # each dropout is now dropout(x), the 1st hole is filled by the threaded key
+    for i in range(3):
+        x = nets.mlp(params["mlp"][i], x, [256, 256])
+        x = dropouts[i](x)
+    x = nn.sigmoid(x)
+    return x
+```
+
+Another rewrite would factor out the repeating block into its own function as follows.
+
+```python
+def block(params, key, x):
+    return chain([
+        nets.mlp(params["mlp"], _, [256,256]),
+        nets.dropout(key, _, 0.2)
+    ])(x)
+
+def model(params, x, key):
+    blocks = thread_params([block for i in range(3)], params) # each block is block(key,x)
+    blocks = thread_key(blocks, key) # each block is block(x)
+
+    return chain(blocks + [nn.relu])(x)
+
+```
+
+To use it, we simply use the `trace` function and use normally as follows.
+
+```python
+trace_key, apply_key_1, apply_key_2, key = random.split(key, 4) # split the keys ;p
+
+params = trace(model, trace_key, x, apply_key_1)
+model(params, x, apply_key_2) # use it like this
+
+# or jit it
+fast_model = jit(model)
+fast_model(params, x, apply_key_2)
 ```
 
 # Ignore below, readme under construction
