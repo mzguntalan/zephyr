@@ -36,16 +36,16 @@ pip install z-zephyr --upgrade
 
 ## Contents
 
--
+[Examples](#examples) | [Sharp Bits](#gotchas) | [Direction](#direction) | [Motivation](#motivation)
 
-## Examples
+## Examples<a id="examples"></a>
 
 Look at the Following Examples
 
 0. [Imports](#imports): Common Gateway for Imports
-1. Encoder and Decoder: This example will show you some of the layers in `zephyr.nets`. We use zephyr's `chain` function to chain functions(neural networks) together.
-2. Parameter Creation: This example will show you how to use custom parameters in your functions/nets.
-3. Dealing with random keys: This example will show you that keys are just Arrays and part of your input. Nevertheless, there are some zephyr utilities you could use
+1. [Encoder and Decoder](#ende): This example will show you some of the layers in `zephyr.nets`. We use zephyr's `chain` function to chain functions(neural networks) together.
+2. [Parameter Creation](#parameters): This example will show you how to use custom parameters in your functions/nets.
+3. [Dealing with random keys](#thread): This example will show you that keys are just Arrays and part of your input. Nevertheless, there are some zephyr utilities you could use
    to transform functions in ways that are useful for dealing with keys.
 
 ### Imports <a id="imports"></a>
