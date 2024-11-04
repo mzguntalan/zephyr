@@ -17,20 +17,22 @@ def validate(
     shape: Shape = None,
     initializer: Initializer = initializer_base,
     expression: Callable = lambda params: True,
-) -> None:
+) -> Union[Array, Skeleton]:
     if type(params) is Skeleton and shape is None:
-        return
+        return params
     if shape is None and expression is None:
-        return
+        return params
     if shape is None and expression is not None:
         expression(params)
-        return
+        return params
 
     if type(params) is Skeleton:
         params == array(shape, initializer)
+        return params
     else:
         # print(params.shape, shape, "<---")
         if not all([params.shape == shape]):
             raise ValueError(
                 f"Incompatible shapes: shape of `params`: {params.shape} should be {shape} as specified."
             )
+    return params  # not reachable, just for mypy
