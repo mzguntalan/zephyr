@@ -17,89 +17,126 @@ and hyper-parameters $\alpha$ and produces an output $y$. Symbolically, it is $y
 
 ## Overview
 
-This overview tries to cover everything briefly one example. Before that, a few things.
+The main mindset in writing zephyr is to think in FP and declarative-manner. Think of composable transformations instead of methods - transformations of both
+data or arrays AND functions. The examples below, will progressively re-write procedural/imperative-oriented code to the use of function transformations.
+This puts the focus on what the transformation will be, rather than what the arrays become after each step.
 
-- `params`: The parameters of a model is contained in a dictionary PyTree with Array leaves patterned after Haiku
-- `_`: is an alias for a placeholder*holder which is a zephyr construct to make partializing a function easier. A `*` hole simply leaves that parameter empty and is passed later. (Same as python partial in functools)
+Before we start. A neural network is just function, usually of `params`, `x`, and hyper-parameters. `f(params, x, **hyperparameters)`. If we wanted to get a function
+without the hyperparameters, since those never change, we can use python's `partial` and rewrite as `new_f = partial(f, **hyperparameters)` and use `new_f(params, x)`. However, using `partial` could get tedious as it doesn't give you signature hints in your editor. Instead, you can use the more readable, zephyr's `_` notation which is an alias for `placeholder_hole` which zephyr nets accept and auto-partializes the function. So we could write `new_f = f(_,_, **hyperparameters)` where `_` stands in for values we pas in later. To make your own function accept `_` holes, you can use the `flexible` decorator.
 
-When writing neural nets with zephyr, you should think declaratively - you just assume that you already have the `params` built-in and you can access with any key you like (e.g. `params["some_name"]`.
+One more thing, this library was heavily inspired by Haiku, and so `params` is a dictionary whose leaves are Arrays. Zephyr, uses the same convention.
 
-Here is a random model with comments to show the shapes of $x$ as it passes throught the layers (it is ommited when obvious).
+Look at the Following Examples
+
+0. Imports: Common Gateway for Imports
+1. Encoder and Decoder: This example will show you some of the layers in `zephyr.nets`. We use zephyr's `chain` function to chain functions(neural networks) together.
+
+### Imports
 
 ```python
-from zephyr import nets
-from zephyr.functools.partial import placeholder_hole as _
-from jax import numpy as jnp
-
-def model(params, x):
-    x = nets.mlp(params["mlp"][0], x, [256, 256]) # b 256
-    x nn.relu(x) # mlp does not activate the last layer by default
-    x = nets.mlp(params["mlp"][1], x, [256, 256])
-    x = nets.relu(x)
-    x = nets.layer_norm(params["ln"][0], x, -1)
-    x = nets.mlp(params["mlp"][2], x, [256, 256]) # b 256
-    x = nets.branch_linear(["br"][0], x, 64) # b 64 256
-    x = nets.conv_1d(params["conv1d"][0], x, 64, 5) # b 64 64
-    x = nn.relu(x)
-    x = nets.layer_norm(params["ln"][1], x, -1)
-    x = nets.conv_1d(params["conv1d"][1], x, 64, 5) # b 64 64
-    x = nn.relu(x)
-    x = nets.max_pool(x, (3,3), 2) # b 32 32
-    x = jnp.reshape(x, [x.shape[0], -1]) # b 1024
-    x = nets.layer_norm(params["ln"][2], x, -1)
-    x = nets.branch_linear(params["br"][1], x, 64) # b 64 1024
-    for i in range (3):
-        x = nets.multi_head_self_attention(params["mha"][i], x, 8) # b 64 1024
-        x = nets.mlp(params["attn_mlp"][i], x, [64, x.shape[-1]]) # b 64 1024
-        x = nets.layer_norm(params["attn_ln"][i], x, -1)
-    x = jnp.reshape(x, [x.shape[0], -1]) # b (64 * 1024) = b 65536
-    x = nets.linear(params["mlp_final"], x, 8) # b 8
-    x = nn.sigmoid(x) # b 8
-    return x
+from jax import numpy as jnp, random, jit
+from zephyr import nets, trace
+from zephyer.nets import chain
+from zephyr.functools.partial import placeholder_hole as _, flexible
 ```
 
-Of course, this model isn't something you would use, but it shows most of zephyr. Like, with other frameworks, a simple step-by-step process like this can be gathered
-with a `chain` with zephyr as follows. Notice the use of `_`: placeholder_hole which stands in for `x` until it is passed. `chain` is used like this `chain(sequence_of_layers)(x)`. Below is how we would re-write the previous model.
+### Example: Encoder and Decoder
+
+Let's write a random encoder and decoder. Notice that we access `params` as if we already have a `params` made. Indeed, this declarative style is something you would have to get used to. Don't worry, zephyr handles making these parameters for you.
+
+For each of the `encoder`, `decoder`, and `model` we offer 2 versions. One focusing on `x`, and the other building the transformation then applying it to `x`.
+
+Encoder: Notice that there neural networks are used just like normal functions. Within each use, we can explicitly see everything, the params, the input/s, and the hyperparameters. This makes code short and concise.
 
 ```python
-from zephyr.functools.partial import placeholder_hole as _
-from zephyr.nets import chain
-from jax import numpy as jnp
 
-def model(params, x):
+@flexible
+def encoder(params, x):
+    x = nets.mlp(params["mlp"], x, [256,256,256]) # b 256
+    x = nets.layer_norm(params["ln"], x, -1)
+    x = nets.branch_linear(params["br"], x, 64) # b 64 256
+
+    for i in range(3):
+        x = nets.conv_1d(params["conv"][i], x, 64, 5)
+        x = nn.relu(x)
+        x = nets.max_pool(x, (3,3), 2)
+
+    x = jnp.reshape(x, [x.shape[0], -1]) # b 256
+    x = nets.linear(params["linear"], x, 4) # b 4
+    return x
+
+
+@flexible
+def encoder(params, x):
     return chain([
-        nets.mlp(params["mlp"][0], _, [256,256]), nn.relu,
-        nets.mlp(params["mlp"][1], _, [256,256]), nn.relu,
-        nets.layer_norm(params["ln"][0], _, -1),
-        nets.mlp(params["mlp"][2], _, [256,256]), nn.relu,
-        nets.branch_linear(params["br"][0], _, 64),
-        nets.conv_1d(params["conv1d"][0], _, 64, 5), nn.relu,
-        nets.layer_norm(params["ln"][1], _, -1),
-        nets.conv_1d(params["conv1d"][1], _, 64, 5), nn.relu,
-        nets.max_pool(_, (3,3), 2),
-        lambda x: jnp.reshape(x, [x.shape[0], -1]),
-        nets.layer_norm(params["ln"][2], _, -1),
-        nets.branch_linear(params["br"][1], _, 64),
-        *[
-            chain([nets.multi_head_self_attention(params["mha"][i], _, 8),
-            lambda x: nets.mlp(params["attn_mlp"][i], x, [64, x.shape[-1]]), nn.relu,
-            nets.layer_norm(params["attn_ln"][i], _, -1)])
-            for i in range(3)
-
+        nets.mlp(params["mlp"], _, [256, 256, 256]),
+        nets.layer_norm(params["ln"], _, -1),
+        nets.branch_linear(params["br"], _, 64),
+        * [
+            chain([
+                nets.conv_1d(params["conv"][i], _, 64, 5),
+                nn.relu,
+                nets.max_pool(_, (3,3), 2),
+            ]) for i in range(3)
         ],
         lambda x: jnp.reshape(x, [x.shape[0], -1]),
-        nets.linear(params["mlp_final"], _, 8),
-        nn.sigmoid,
+        nets.linear(params["linear"], _, 4)
+    ])(x)
+
+```
+
+Decoder: Notice that skip connections can be wrapped within a `skip` function/network that automatically adds a skip connection as `skip(f)(x) = f(x) + x`.
+
+```python
+@flexible
+def decoder(params, z):
+    x = nets.mlp(params["mlp"], x, [256,256,256]) # b 256
+    x = nets.branch_linear(params["br"], x, 64) # b 64 256
+
+    for i in range(3):
+        x = nets.multi_head_self_attention(params["mha"][i], x, 64, 5)
+        x = x + nets.mlp(params["attn_mlp"][i], x, [256, 256])
+        x = nets.layer_norm(params["attn_ln"][i], x, -1)
+
+    x = jnp.reshape(x, [x.shape[0], -1]) # b (64 * 128) = b 16384
+    x = nets.linear(params["linear"], x, 128) # b 128
+    return x
+
+@flexible
+def decoder(params, z):
+    return chain([
+        nets.mlp(params["mlp"], _, [256, 256, 256]),
+        nets.branch_linear(params["br"], _, 64),
+        *[
+            chain([
+                nets.multi_head_self_attention(params["mha"][i], _, 64, 5),
+                nets.skip(nets.mlp(params["attn_mlp"][i], _, [256,256])),
+                nets.layer_norm(params["attn_ln"][i], _, -1),
+            ]) for i in range(3)
+        ],
+        lambda x: jnp.reshape(x, [x.shape[0], -1]),
+        nets.linear(params["linear"], _, 128) # b 128
     ])(x)
 ```
 
-To use the model, is simple, we construct the `params` which is easy! We use the `trace` from zephyr. We use the model just by a normal
-function call `model(params, x)`.
+Model:
 
 ```python
-from zephyr import trace
-from jax import random, jit
+def model(params, x):
+    z = encoder(params["encoder"], x)
+    reconstructed_x = decoder(params["decoder"], z)
+    return reconstructed_x
 
+def model(params, x):
+    return chain([
+        encoder(params["encoder"], _),
+        decoder(params["decoder"], _),
+    ])(x)
+```
+
+To get an initial `params`, we simply use the trace function as follows.
+
+```python
 key = random.PRNGKey(0) # needed to randomly initialize weights
 x = jnp.ones([64, 8]) # sample input batch:w
 
@@ -110,7 +147,9 @@ fast_model = jit(model) # tracing of `trace` cannot trace a jit-ed function, ple
 sample_outputs = fast_model(params, x) # b 8
 ```
 
-Ignore below, readme under construction
+For model surgery or study: if you wanted to use just the enoder, then you can do `z = encoder(params["encoder"], x)`. You can do the same with any function/layer.
+
+# Ignore below, readme under construction
 
 ## Current Gotchas
 
