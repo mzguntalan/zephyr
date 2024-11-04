@@ -17,6 +17,8 @@ and hyper-parameters $\alpha$ and produces an output $y$. Symbolically, it is $y
 
 ## Overview
 
+Zephyr, at the core, is just the `trace` and `validate` function with extra utilities. `trsce` gives you parameters. `validate` checks expressions related to parameters.
+
 The main mindset in writing zephyr is to think in FP and declarative-manner. Think of composable transformations instead of methods - transformations of both
 data or arrays AND functions. The examples below, will progressively re-write procedural/imperative-oriented code to the use of function transformations.
 This puts the focus on what the transformation will be, rather than what the arrays become after each step.
@@ -32,17 +34,21 @@ One more thing, this library was heavily inspired by Haiku, and so `params` is a
 pip install z-zephyr --upgrade
 ```
 
+## Contents
+
+-
+
 ## Examples
 
 Look at the Following Examples
 
-0. Imports: Common Gateway for Imports
+0. [Imports](#imports): Common Gateway for Imports
 1. Encoder and Decoder: This example will show you some of the layers in `zephyr.nets`. We use zephyr's `chain` function to chain functions(neural networks) together.
 2. Parameter Creation: This example will show you how to use custom parameters in your functions/nets.
 3. Dealing with random keys: This example will show you that keys are just Arrays and part of your input. Nevertheless, there are some zephyr utilities you could use
    to transform functions in ways that are useful for dealing with keys.
 
-### Imports
+### Imports <a id="imports"></a>
 
 These are the imports for all the examples
 
@@ -54,7 +60,7 @@ from zephyr.nets import chain
 from zephyr.functools.partial import placeholder_hole as _, flexible
 ```
 
-### Example: Encoder and Decoder
+### Example: Encoder and Decoder<a id="ende"></a>
 
 Let's write a random encoder and decoder. Notice that we access `params` as if we already have a `params` made. Indeed, this declarative style is something you would have to get used to. Don't worry, zephyr handles making these parameters for you.
 
@@ -163,10 +169,10 @@ sample_outputs = fast_model(params, x) # b 8
 
 For model surgery or study: if you wanted to use just the enoder, then you can do `z = encoder(params["encoder"], x)`. You can do the same with any function/layer.
 
-### Examples: Making your own parameters
+### Examples: Making your own parameters<a id="parameters"></a>
 
 To illustrate this, we will make our own `linear` layer using zephyr. In line with the declarative thinking, we specify what the shape of the paramters would look like -
-Ideally, we can put this in the type annotation, but that's ignored by Python, so we instead use zephyr's `valudate` as an alternative. One main use of `validate` is
+Ideally, we can put this in the type annotation, but that's ignored by Python, so we instead use zephyr's `validate` as an alternative. One main use of `validate` is
 to specify parameter shape, initializer, and other relationships it might have with hyperparameters.
 
 ```python
@@ -207,7 +213,7 @@ fast_model = jit(model)
 fast_model(params, x)
 ```
 
-### Dealing with random keys
+### Dealing with random keys <a id="thread"></a>
 
 Random keys or RNGs are somewhat an unfamiliar concept usually, since in FP you have to be explicit with these. So when you try to get rid of it using OO then
 it tends to stick out like a sore thumb at the end. In zephyr, we embrace this and treat key as you would anything - it is just input to data.
@@ -270,15 +276,15 @@ fast_model = jit(model)
 fast_model(params, x, apply_key_2)
 ```
 
-## Current Gotchas
+## Sharp Bits <a id="gotchas"></a>
 
 1. Documentation Strings are sparse: I'll add them soon :3.
-2. JAX Gotchas: You'll be dealing with JAX gotchas sometimes like "str and int can't be compared" which is a jax thing. Any trouble you might have, you can open an issue and i'll help.
+2. JAX Sharp Bits: You'll be dealing with JAX sharp bits sometimes like "str and int can't be compared" which is a jax thing, since Zephyr is such a thin library on top of JAX (it isn't even a thin wrapper). Any trouble you might have, you can open an issue and i'll help.
 3. Bugs: If you use it, there'll probably be bugs, if you report them, I'll work on them immediately.
 4. Missing nets: like RNNs, I'll add them soon when I need them or requested.
 5. Instability: Things are still changing a lot. I might implement other nets/layers in a different way or change names or move things.
 
-## Direction
+## Direction <a id="direction"></a>
 
 I would like to provide more FP tooling for python in zephyr and so I could write zephyr nets in more FP-style. Zephyr itself, it's core, is probably close
 to stable: mainly `trace` and `validate`, anything else is just to make coding easier or shorter.
@@ -293,7 +299,3 @@ simply just a function.
 This library is also inspired by other frameworks I have tried in the past: Tensorflow and PyTorch. Tensorflow allows for shape
 inference to happen after the first pass of inputs, PyTorch (before the Lazy Modules) need the input shapes at layer creation. Zephyr
 wants to be as easy as possible and will strive to always use at-inference-time shape-inference and use relative axis positions whenever possible.
-
-## Final Note
-
-If you encounter bugs(probably will), please submit them to Issues and I'll try to fix them as soon as possible.
