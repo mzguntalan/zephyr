@@ -20,9 +20,10 @@ from typing import Union
 
 
 class Hole:
-    def __init__(self, name: str = ""):
+    def __init__(self, unpack=lambda x: x, name: str = ""):
         self._name = name
         self._value = Underived()
+        self._unpack = unpack
 
     def __eq__(self, anything_is_equal_to_this):
         if self.is_unset:
@@ -77,6 +78,13 @@ class Hole:
 
     def __str__(self):
         return str(self.value)
+
+    def __getitem__(self, key):
+        return Hole(lambda x: self.unpack(x)["key"])
+
+    @property
+    def unpack(self):
+        return self._unpack
 
 
 class PlaceholderHole(Hole): ...
@@ -248,7 +256,6 @@ def _contains_placeholder_hole(seq: Sequence[Any]) -> bool:
 
 def flexible(f):
     @hole_aware
-    @deriving_holes
     @wraps(f)
     def inner(*args, **kwargs):
         return f(*args, **kwargs)
