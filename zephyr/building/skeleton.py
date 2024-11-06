@@ -154,7 +154,7 @@ class Skeleton(Array):
         return self.materialize().sharding
 
     @property
-    def commited(self) -> bool:
+    def committed(self) -> bool:
         return (
             self.materialize().commited
         )  # this might return an AttributeError, but that comes from jax initializing an array without this attribute <- not zephyr problem (so far)
