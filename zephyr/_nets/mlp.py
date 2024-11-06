@@ -40,7 +40,7 @@ def mlp(
     else:
         i += 1
     x = linear(
-        params[i], x, out_dims[-1], use_bias, weight_initializer, bias_initializer
+        params[i], x, out_dims[i], use_bias, weight_initializer, bias_initializer
     )
 
     if activate_final:
