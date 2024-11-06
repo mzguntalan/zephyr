@@ -12,7 +12,7 @@ from jaxtyping import Array
 from zephyr.functools.partial import flexible
 
 
-@flexible
+# @flexible
 def thread(
     functions: Sequence[Callable], t: Any, split_rule: Callable = lambda x, i: x
 ) -> Sequence[Callable]:
@@ -29,6 +29,7 @@ def thread(
 
 @flexible
 def chain(functions: Sequence[Callable]) -> Callable:
+    @flexible
     def f(x):
         for fn in functions:
             x = fn(x)
@@ -55,6 +56,7 @@ def identity_split(x, i):
 
 @flexible
 def skip(f):
+    @flexible
     @wraps(f)
     def inner(x):
         return x + f(x)
