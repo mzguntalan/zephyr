@@ -21,6 +21,7 @@ def token_embed(
     embed_dim: int,
     initial_embedding_matrix: Optional[Array] = None,
     initializer: Initializer = initializer_base,
+    activation=lambda x: x,
 ) -> Array:
     if initial_embedding_matrix is not None:
         validate(
@@ -35,4 +36,6 @@ def token_embed(
         )
     else:
         validate(params["token_embeddings"], (vocab_size, embed_dim), initializer)
-    return jnp.asarray(params["token_embeddings"])[(x_token_ids,)]
+    z = jnp.asarray(params["token_embeddings"])[(x_token_ids,)]
+    z = activation(z)
+    return z

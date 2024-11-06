@@ -32,12 +32,14 @@ def linear(
     use_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
+    activation=lambda x: x,
 ) -> Array:
     validate(params["weights"], (x.shape[-1], out_dim), weights_initializer)
     z = x @ params["weights"]
     if use_bias:
         validate(params["bias"], (out_dim,), bias_initializer)
         z = z + params["bias"]
+    z = activation(z)
     return z
 
 
@@ -49,6 +51,7 @@ def branch_linear(
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
+    activation=lambda x: x,
 ) -> Array:
     """Branches the last dimension of `x` with each branch having the same dimension as the last dimension of `x`
 
@@ -71,6 +74,7 @@ def branch_linear(
         with_bias,
         weights_initializer,
         bias_initializer,
+        activation,
     )
     z = jnp.reshape(z, z.shape[:-1] + (num_branches, x.shape[-1]))
 
@@ -85,6 +89,7 @@ def linear_like(
     use_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
+    activation=lambda x: x,
 ) -> Array:
     validate(
         params,
@@ -102,6 +107,7 @@ def linear_like(
         use_bias,
         weights_initializer,
         bias_initializer,
+        activation,
     )
 
     return array_with_desired_shape
@@ -124,6 +130,7 @@ def conv_general(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     if data_format != "CHANNELS_LAST":
         raise NotImplementedError(f"`data_format` not supported")
@@ -173,6 +180,8 @@ def conv_general(
     if not uses_batches:
         z = jnp.squeeze(z, 0)
 
+    z = activation(z)
+
     return z
 
 
@@ -192,6 +201,7 @@ def conv_1d(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     return conv_general(
         params,
@@ -209,6 +219,7 @@ def conv_1d(
         bias_initializer,
         feature_group_count,
         data_format,
+        activation,
     )
 
 
@@ -228,6 +239,7 @@ def conv_2d(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     return conv_general(
         params,
@@ -245,6 +257,7 @@ def conv_2d(
         bias_initializer,
         feature_group_count,
         data_format,
+        activation,
     )
 
 
@@ -264,6 +277,7 @@ def conv_3d(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     return conv_general(
         params,
@@ -281,6 +295,7 @@ def conv_3d(
         bias_initializer,
         feature_group_count,
         data_format,
+        activation,
     )
 
 
@@ -299,6 +314,7 @@ def conv_transpose_general(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     if data_format != "CHANNELS_LAST":
         raise NotImplementedError(f"`data_format` not supported")
@@ -347,6 +363,8 @@ def conv_transpose_general(
     if not uses_batches:
         z = jnp.squeeze(z, 0)
 
+    z = activation(z)
+
     return z
 
 
@@ -364,6 +382,7 @@ def conv_transpose_1d(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     return conv_transpose_general(
         params,
@@ -379,6 +398,7 @@ def conv_transpose_1d(
         bias_initializer,
         feature_group_count,
         data_format,
+        activation,
     )
 
 
@@ -396,6 +416,7 @@ def conv_transpose_2d(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     return conv_transpose_general(
         params,
@@ -411,6 +432,7 @@ def conv_transpose_2d(
         bias_initializer,
         feature_group_count,
         data_format,
+        activation,
     )
 
 
@@ -428,6 +450,7 @@ def conv_transpose_3d(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     feature_group_count: int = 1,
     data_format: Literal["CHANNELS_LAST"] = "CHANNELS_LAST",
+    activation=lambda x: x,
 ) -> Array:
     return conv_transpose_general(
         params,
@@ -443,6 +466,7 @@ def conv_transpose_3d(
         bias_initializer,
         feature_group_count,
         data_format,
+        activation,
     )
 
 

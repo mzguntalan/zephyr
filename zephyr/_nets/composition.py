@@ -15,6 +15,11 @@ Layer = Callable[[Params, Array], Array]
 
 
 @hole_aware
+def chain(params: PyTree, layers):
+    return sequential(params, _, layers: Sequence[Callable[[Params, Array], Array]])
+
+
+@hole_aware
 def sequential(
     params: PyTree, x: Array, layers: Sequence[Callable[[Params, Array], Array]]
 ) -> Array:

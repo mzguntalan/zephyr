@@ -26,6 +26,7 @@ def layer_norm(
     eps: float = 1e-16,
     scale_initializer: Initializer = initializers.ones,
     offset_initializer: Initializer = initializers.zeros,
+    activation=lambda x: x,
 ) -> Array:
     mean = jnp.mean(x, axis=axis, keepdims=True)
     variance = jnp.var(x, axis=axis, keepdims=True)
@@ -47,6 +48,8 @@ def layer_norm(
 
     inversion = scale * rsqrt(variance + eps)
     normalized = inversion * (x - mean) + offset
+
+    normalized = activation(normalized)
 
     return normalized
 

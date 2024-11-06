@@ -18,7 +18,7 @@ def mlp(
     x: Array,
     out_dims: list[int],
     activation=nn.relu,
-    activate_final: bool = False,
+    activation_final=lambda x: x,
     use_bias: bool = True,
     weight_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
@@ -43,7 +43,6 @@ def mlp(
         params[i], x, out_dims[i], use_bias, weight_initializer, bias_initializer
     )
 
-    if activate_final:
-        x = activation(x)
+    x = activation_final(x)
 
     return x

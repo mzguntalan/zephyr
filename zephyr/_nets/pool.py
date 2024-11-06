@@ -19,6 +19,7 @@ def max_pool(
     stride: ShapeExpression = 1,
     padding: PaddingPreset = "SAME",
     channel_axis: int = -1,
+    activation=lambda x: x,
 ) -> Array:
     if channel_axis != -1 and len(x.shape) != channel_axis:
         raise NotImplementedError("only channel last implemented")
@@ -37,6 +38,7 @@ def avg_pool(
     stride: ShapeExpression = 1,
     padding: PaddingPreset = "SAME",
     channel_axis: int = -1,
+    activation=lambda x: x,
 ) -> Array:
     if channel_axis != -1 and len(x.shape) != channel_axis:
         raise NotImplementedError("only channel last implemented")

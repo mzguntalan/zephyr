@@ -24,6 +24,7 @@ def single_head_attention(
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
+    activation=lambda x: x,
 ) -> Array:
     keys = linear(
         params["linear_keys"],
@@ -61,6 +62,7 @@ def single_head_attention(
     attention_map = nn.softmax(scores, axis=-1)
 
     answers = attention_map @ values
+    answers = activation(answers)
     return answers
 
 
@@ -75,6 +77,7 @@ def multi_head_attention(
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
+    activation=lambda x: x,
 ) -> Array:
     validate(
         params,
@@ -140,6 +143,8 @@ def multi_head_attention(
         bias_initializer,
     )
 
+    combined_heads = activation(combined_heads)
+
     return combined_heads
 
 
@@ -152,6 +157,7 @@ def multi_head_self_attention(
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
+    activation=lambda x: x,
 ) -> Array:
     return multi_head_attention(
         params,
@@ -163,4 +169,5 @@ def multi_head_self_attention(
         with_bias,
         weights_initializer,
         bias_initializer,
+        activation,
     )
