@@ -24,6 +24,7 @@ class Hole:
         self._name = name
         self._value = Underived()
         self._unpack = unpack
+        self._wrapped_function = lambda x: x
 
     def __eq__(self, anything_is_equal_to_this):
         if self.is_unset:
@@ -86,8 +87,34 @@ class Hole:
     def unpack(self):
         return self._unpack
 
+    def __call__(self, x):
+        return self._wrapped_function(x)
+
 
 class PlaceholderHole(Hole): ...
+
+
+# class holed_function(PlaceholderHole):
+#     def __init__(self, wrapped_f):
+#         PlaceholderHole.__init__(self)
+#         self._wrapped_function = wrapped_f
+
+#     # def __get__():
+#     #     # get the meta typing
+#     #     ...
+
+#     def __call__(self, x):
+#         # check if there are holes
+#         return self._wrapped_function(x)
+
+
+class holed_function(PlaceholderHole):
+    def __init__(self, wrapped_f):
+        PlaceholderHole.__init__(self)
+        self._wrapped_f = wrapped_f
+
+    def __call__(self, *args, **kwargs):
+        return self._wrapped_f(*args, **kwargs)
 
 
 class DerivableHole(Hole):
@@ -131,6 +158,23 @@ InnerFunction = Callable[
 ]
 
 
+def infinite_generator(value):
+    while True:
+        yield value
+
+
+class Unspecified:
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "UNSPECIFIED"
+
+
+unspecified_parameter = Unspecified()
+
+
+# doing: replace REPLACEMENT OF HOLES with CALLING OF HOLES
 def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
     @wraps(f)
     def inner(
@@ -141,29 +185,40 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
         for arg in chain(
             args_possibly_with_placeholders, kwargs_possibly_with_placeholders.values()
         ):
-            if type(arg) is PlaceholderHole:
+            if isinstance(arg, PlaceholderHole):
                 is_with_placeholder = True
                 break
 
         if not is_with_placeholder:
-            complete_args = args_possibly_with_placeholders
-            complete_kwargs = kwargs_possibly_with_placeholders
-            return f(*complete_args, **kwargs_possibly_with_placeholders)
+            return f(
+                *args_possibly_with_placeholders, **kwargs_possibly_with_placeholders
+            )
 
         @hole_aware
         def almost_f(
             *missing_args: MissingParameters,
             **missing_kwargs_or_overwrites: MissingParameters,
         ) -> Return:
-
-            missing_args_supply = iter(missing_args)
+            missing_args_supply = chain(iter(missing_args))
             complete_args = []
             for arg in args_possibly_with_placeholders:
-                if type(arg) is PlaceholderHole:
-                    complete_args.append(next(missing_args_supply))
+                if isinstance(arg, PlaceholderHole):
+                    supplied_arg_for_hole = next(
+                        missing_args_supply, unspecified_parameter
+                    )  # if no more missing_args then use the arg
+
+                    transformed_arg = (
+                        arg
+                        if isinstance(supplied_arg_for_hole, Unspecified)
+                        else arg(supplied_arg_for_hole)
+                    )
+                    complete_args.append(
+                        transformed_arg
+                    )  # <- a call to a hole by default is just identity
                 else:
                     complete_args.append(arg)
 
+            # handle holed_function kwargs
             complete_kwargs = (
                 kwargs_possibly_with_placeholders | missing_kwargs_or_overwrites
             )
@@ -171,9 +226,9 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
             if _contains_placeholder_hole(complete_kwargs.values()):
                 return almost_f(*complete_args, **complete_kwargs)
 
-            return f(*complete_args, **complete_kwargs)
+            return hole_aware(f)(*complete_args, **complete_kwargs)
 
-        return almost_f
+        return holed_function(almost_f)
 
     inner._original_function = f
     return inner
@@ -250,11 +305,8 @@ def _contains_placeholder_hole(seq: Sequence[Any]) -> bool:
     return False
 
 
-# def flexible(f):  # todo name might change
-#     return hole_aware(deriving_holes(f))
-
-
 def flexible(f):
+    # deriving_holes is postponed as it is very tedious to write
     @hole_aware
     @wraps(f)
     def inner(*args, **kwargs):
