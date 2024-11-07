@@ -108,13 +108,13 @@ class PlaceholderHole(Hole): ...
 #         return self._wrapped_function(x)
 
 
-class holed_function(PlaceholderHole):
-    def __init__(self, wrapped_f):
-        PlaceholderHole.__init__(self)
-        self._wrapped_f = wrapped_f
+# class holed_function(PlaceholderHole):
+#     def __init__(self, wrapped_f):
+#         PlaceholderHole.__init__(self)
+#         self._wrapped_f = wrapped_f
 
-    def __call__(self, *args, **kwargs):
-        return self._wrapped_f(*args, **kwargs)
+#     def __call__(self, *args, **kwargs):
+#         return self._wrapped_f(*args, **kwargs)
 
 
 class DerivableHole(Hole):
@@ -203,22 +203,12 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
             complete_args = []
             for arg in args_possibly_with_placeholders:
                 if isinstance(arg, PlaceholderHole):
-                    supplied_arg_for_hole = next(
-                        missing_args_supply, unspecified_parameter
-                    )  # if no more missing_args then use the arg
+                    supplied_arg_for_hole = next(missing_args_supply)
 
-                    transformed_arg = (
-                        arg
-                        if isinstance(supplied_arg_for_hole, Unspecified)
-                        else arg(supplied_arg_for_hole)
-                    )
-                    complete_args.append(
-                        transformed_arg
-                    )  # <- a call to a hole by default is just identity
+                    complete_args.append(supplied_arg_for_hole)
                 else:
                     complete_args.append(arg)
 
-            # handle holed_function kwargs
             complete_kwargs = (
                 kwargs_possibly_with_placeholders | missing_kwargs_or_overwrites
             )
@@ -228,7 +218,7 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
 
             return hole_aware(f)(*complete_args, **complete_kwargs)
 
-        return holed_function(almost_f)
+        return almost_f
 
     inner._original_function = f
     return inner
