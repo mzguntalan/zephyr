@@ -20,11 +20,9 @@ from typing import Union
 
 
 class Hole:
-    def __init__(self, unpack=lambda x: x, name: str = ""):
+    def __init__(self, name: str = ""):
         self._name = name
         self._value = Underived()
-        self._unpack = unpack
-        self._wrapped_function = lambda x: x
 
     def __eq__(self, anything_is_equal_to_this):
         if self.is_unset:
@@ -83,38 +81,8 @@ class Hole:
     def __getitem__(self, key):
         return Hole(lambda x: self.unpack(x)["key"])
 
-    @property
-    def unpack(self):
-        return self._unpack
-
-    def __call__(self, x):
-        return self._wrapped_function(x)
-
 
 class PlaceholderHole(Hole): ...
-
-
-# class holed_function(PlaceholderHole):
-#     def __init__(self, wrapped_f):
-#         PlaceholderHole.__init__(self)
-#         self._wrapped_function = wrapped_f
-
-#     # def __get__():
-#     #     # get the meta typing
-#     #     ...
-
-#     def __call__(self, x):
-#         # check if there are holes
-#         return self._wrapped_function(x)
-
-
-# class holed_function(PlaceholderHole):
-#     def __init__(self, wrapped_f):
-#         PlaceholderHole.__init__(self)
-#         self._wrapped_f = wrapped_f
-
-#     def __call__(self, *args, **kwargs):
-#         return self._wrapped_f(*args, **kwargs)
 
 
 class DerivableHole(Hole):
@@ -203,9 +171,11 @@ def hole_aware(f: FunctionToBeWrapped) -> InnerFunction:
             complete_args = []
             for arg in args_possibly_with_placeholders:
                 if isinstance(arg, PlaceholderHole):
-                    supplied_arg_for_hole = next(missing_args_supply)
+                    candidate_arg_for_hole = next(missing_args_supply)
 
-                    complete_args.append(supplied_arg_for_hole)
+                    supplied_arg = candidate_arg_for_hole
+
+                    complete_args.append(supplied_arg)
                 else:
                     complete_args.append(arg)
 
