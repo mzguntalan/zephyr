@@ -40,6 +40,8 @@ pip install z-zephyr --upgrade
 
 ## Examples<a id="examples"></a>
 
+> Note: OUTDATED : I've changed the API to make them even easier to write
+
 Look at the Following Examples
 
 0. [Imports](#imports): Common Gateway for Imports
@@ -79,7 +81,7 @@ def encoder(params, x):
     for i in range(3):
         x = nets.conv_1d(params["conv"][i], x, 64, 5)
         x = nn.relu(x)
-        x = nets.max_pool(x, (3,3), 2)
+        x = nets.max_pool(params, x, (3,3), 2)
 
     x = jnp.reshape(x, [x.shape[0], -1]) # b 256
     x = nets.linear(params["linear"], x, 4) # b 4
@@ -96,7 +98,7 @@ def encoder(params, x):
             chain([
                 nets.conv_1d(params["conv"][i], _, 64, 5),
                 nn.relu,
-                nets.max_pool(_, (3,3), 2),
+                nets.max_pool(params, _, (3,3), 2),
             ]) for i in range(3)
         ],
         lambda x: jnp.reshape(x, [x.shape[0], -1]),
@@ -225,7 +227,7 @@ def model(params, x, key):
     for i in range(3):
         x = nets.mlp(params["mlp"][i], x, [256, 256])
         key, subkey = random.split(key)
-        x = nets.dropout(subkey, x, 0.2)
+        x = nets.dropout(params, subkey, x, 0.2)
     x = nn.sigmoid(x)
     return x
 ```
@@ -234,25 +236,13 @@ As with previous examples, we offer rewrites of this, none of which are "more el
 
 Zephyr has a `thread` function with specific variants such as `thread_key`, `thread_params`, and `thread_identity` which should be enough for most cases.
 
-Here is the same model but using the `thread_key` function to "thread" the `key` to multiple `dropouts` (this could be any function with a key as a first parameter).
-
-```python
-def model(params, x, key):
-    dropouts = thread_key([nets.dropout(_, _, 0.2) for i in range(3)], key) # each dropout is now dropout(x), the 1st hole is filled by the threaded key
-    for i in range(3):
-        x = nets.mlp(params["mlp"][i], x, [256, 256])
-        x = dropouts[i](x)
-    x = nn.sigmoid(x)
-    return x
-```
-
 Another rewrite would factor out the repeating block into its own function as follows.
 
 ```python
 def block(params, key, x):
     return chain([
         nets.mlp(params["mlp"], _, [256,256]),
-        nets.dropout(key, _, 0.2)
+        nets.dropout(params, key, _, 0.2)
     ])(x)
 
 def model(params, x, key):
