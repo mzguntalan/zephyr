@@ -1,8 +1,10 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
-![Version 0.0.7](https://img.shields.io/badge/version-0.0.7-green)
+![Version 0.0.8](https://img.shields.io/badge/version-0.0.8-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
+
+> New: Tags, and apply (already in code, to appear in README soon)
 
 Zephyr is a new FP-oriented neural network library/framework on top of JAX that helps
 you write short, simple, declarative neural networks quickly and easily with minimal
