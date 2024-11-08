@@ -14,7 +14,7 @@ from zephyr.project_typing import ShapeExpression
 
 @flexible
 def max_pool(
-    params,
+    _params,
     x: Array,
     window_shape: ShapeExpression,
     stride: ShapeExpression = 1,
@@ -34,7 +34,7 @@ def max_pool(
 
 @flexible
 def avg_pool(
-    params,
+    _params,
     x: Array,
     window_shape: ShapeExpression,
     stride: ShapeExpression = 1,
