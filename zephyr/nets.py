@@ -1,6 +1,7 @@
 from zephyr._nets.attention import multi_head_attention
 from zephyr._nets.attention import multi_head_self_attention
 from zephyr._nets.attention import single_head_attention
+from zephyr._nets.composition import sequential
 from zephyr._nets.dropout import dropout
 from zephyr._nets.embed import token_embed
 from zephyr._nets.linear import branch_linear
