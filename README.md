@@ -1,7 +1,7 @@
 # zephyr
 
 ![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
-![Version 0.0.9](https://img.shields.io/badge/version-0.0.9-green)
+![Version 0.0.10](https://img.shields.io/badge/version-0.0.10-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
 > New: Tags, and apply (already in code, to appear in README soon)
