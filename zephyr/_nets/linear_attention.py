@@ -71,39 +71,13 @@ def multi_head_linear_attention(
     weights_initializer=initializers.initializer_base,
     bias_initializer=initializers.initializer_base,
 ) -> Array:
-    validate(
-        params,
-        expression=lambda params: params["branch_linear_queries"]["weights"].shape[-2]
-        // queries.shape[-1]
-        == num_heads,
-    )
 
-    queries = branch_linear(
-        params["branch_linear_queries"],
-        queries,
-        num_heads,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
-    keys = branch_linear(
-        params["branch_linear_keys"],
-        keys,
-        num_heads,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
-    values = branch_linear(
-        params["branch_linear_values"],
-        values,
-        num_heads,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
+    new_shape = queries.shape[:-1] + (num_heads, -1)
+    queries = jnp.reshape(queries, new_shape)
+    keys = jnp.reshape(queries, new_shape)
+    values = jnp.reshape(queries, new_shape)
 
-    # queries, keys, values [..., s, h, e]
+    # queries, keys, values [..., s, h, h//e]
     #                       [...,-3,-2,-1]
 
     queries = jnp.moveaxis(queries, -2, -3)
@@ -120,7 +94,7 @@ def multi_head_linear_attention(
         bias_initializer,
     )  # [..., h, s, e]
 
-    multi_head_answers = jnp.moveaxis(multi_head_answers, -2, -3)  # [..., s , h, e]
+    multi_head_answers = jnp.moveaxis(multi_head_answers, -2, -3)  # [..., s , h, h//e]
 
     combined_heads = jnp.reshape(
         multi_head_answers, multi_head_answers.shape[:-2] + (-1,)
@@ -129,7 +103,7 @@ def multi_head_linear_attention(
     combined_heads = linear(
         params["linear_combined_heads"],
         combined_heads,
-        combined_heads.shape[-1] // num_heads,
+        combined_heads.shape[-1],
         with_bias,
         weights_initializer,
         bias_initializer,
