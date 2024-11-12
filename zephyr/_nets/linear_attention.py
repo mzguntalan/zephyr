@@ -10,68 +10,30 @@ from zephyr._nets.mlp import mlp
 from zephyr._nets.norm import layer_norm
 from zephyr.building import initializers
 from zephyr.building.template import validate
-from zephyr.functools.partial import deriving_holes
-from zephyr.functools.partial import hole_aware
+from zephyr.functools.partial import flexible
 
 
-@hole_aware
-@deriving_holes
-def single_head_linear_attention(
-    params: PyTree,
-    queries: Array,
-    keys: Array,
-    values: Array,
-    with_bias: bool = True,
-    weights_initializer=initializers.initializer_base,
-    bias_initializer=initializers.initializer_base,
-) -> Array:
-    # queries, keys, values [... s|p, k|v]
-    queries = linear(
-        params["linear_queries"],
-        queries,
-        queries.shape[-1],
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
-    keys = linear(
-        params["linear_keys"],
-        keys,
-        keys.shape[-1],
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
-    values = linear(
-        params["linear_values"],
-        values,
-        values.shape[-1],
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
+def fmap(x: Array) -> Array:
+    return nn.elu(x) + 1
 
-    scores = queries @ (jnp.moveaxis(keys, -2, -1) @ values)
-    normalizer = queries @ (jnp.moveaxis(keys, -2, -1) @ jnp.ones_like(values))
+
+@flexible
+def linear_attention(queries: Array, keys: Array, values: Array) -> Array:
+    q = fmap(queries)
+    k = fmap(keys)
+
+    keys_transposed = jnp.moveaxis(k, -2, -1)
+    scores = q @ (keys_transposed @ values)
+    normalizer = q @ (keys_transposed @ jnp.ones_like(values))
 
     answers = scores / (normalizer + 1e-17)
-
     return answers
 
 
-@hole_aware
-@deriving_holes
+@flexible
 def multi_head_linear_attention(
-    params: PyTree,
-    queries,
-    keys,
-    values,
-    num_heads: int,
-    with_bias: bool = True,
-    weights_initializer=initializers.initializer_base,
-    bias_initializer=initializers.initializer_base,
+    queries, keys, values, num_heads: int, activation=lambda x: x
 ) -> Array:
-
     new_shape = queries.shape[:-1] + (num_heads, -1)
     queries = jnp.reshape(queries, new_shape)
     keys = jnp.reshape(queries, new_shape)
@@ -84,15 +46,7 @@ def multi_head_linear_attention(
     keys = jnp.moveaxis(keys, -2, -3)
     values = jnp.moveaxis(values, -2, -3)
 
-    multi_head_answers = single_head_linear_attention(
-        params["single_head_linear_attention"],
-        queries,
-        keys,
-        values,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )  # [..., h, s, e]
+    multi_head_answers = linear_attention(queries, keys, values)  # [..., h, s, e]
 
     multi_head_answers = jnp.moveaxis(multi_head_answers, -2, -3)  # [..., s , h, h//e]
 
@@ -100,66 +54,74 @@ def multi_head_linear_attention(
         multi_head_answers, multi_head_answers.shape[:-2] + (-1,)
     )
 
-    combined_heads = linear(
-        params["linear_combined_heads"],
-        combined_heads,
-        combined_heads.shape[-1],
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
+    combined_heads = activation(combined_heads)
 
     return combined_heads
 
 
-@hole_aware
+@flexible
 def linear_transformer_block(
     params: PyTree,
     queries: Array,
     keys: Array,
     values: Array,
     num_heads: int,
+    embed_dim: int,
     mlp_dim: int,
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
+    activation=lambda x: x,
 ) -> Array:
-    queries = linear_like(
-        params["initial_projection_queries"],
+    queries = linear(
+        params["linear"]["queries"],
         queries,
-        values,
+        embed_dim,
         with_bias,
         weights_initializer,
         bias_initializer,
     )
-    keys = linear_like(
-        params["initial_projection_keys"],
+    keys = linear(
+        params["linear"]["keys"],
         keys,
-        values,
+        embed_dim,
         with_bias,
         weights_initializer,
         bias_initializer,
     )
-    # values don't have to be projected since its embedding dimension was the reference
-    z = multi_head_linear_attention(
-        params["multi_head_linear_attention"],
-        queries,
-        keys,
+    values = linear(
+        params["linear"]["values"],
         values,
-        num_heads,
+        embed_dim,
         with_bias,
         weights_initializer,
         bias_initializer,
     )
 
-    z = layer_norm(params["layer_norm"], z + queries, -1, True, True)
-    z = z + mlp(
-        params["mlp"],
-        z,
-        [mlp_dim, queries.shape[-1]],
-        with_bias,
-        weights_initializer,
-        bias_initializer,
+    # values don't have to be projected since its embedding dimension was the reference
+    z = multi_head_linear_attention(
+        queries,
+        keys,
+        values,
+        num_heads,
     )
+
+    z = layer_norm(params["layer_norm"][0], z + queries, -1, True, True)
+    z = layer_norm(
+        params["layer_norm"][1],
+        z
+        + mlp(
+            params["mlp"],
+            z,
+            [mlp_dim, embed_dim],
+            weight_initializer=weights_initializer,
+            bias_initializer=bias_initializer,
+        ),
+        -1,
+        True,
+        True,
+    )
+
+    z = activation(z)
 
     return z

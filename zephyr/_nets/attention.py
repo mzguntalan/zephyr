@@ -171,3 +171,6 @@ def multi_head_self_attention(
         bias_initializer,
         activation,
     )
+
+
+# todo: refine this to align with others
