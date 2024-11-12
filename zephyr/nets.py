@@ -17,7 +17,6 @@ from zephyr._nets.linear import linear
 from zephyr._nets.linear import linear_like
 from zephyr._nets.linear_attention import linear_transformer_block
 from zephyr._nets.linear_attention import multi_head_linear_attention
-from zephyr._nets.linear_attention import single_head_linear_attention
 from zephyr._nets.mlp import mlp
 from zephyr._nets.norm import layer_norm
 from zephyr._nets.pool import avg_pool
