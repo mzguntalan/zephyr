@@ -38,9 +38,9 @@ class Skeleton(Array):
                     r = r.materialize()
                 d[k] = r
             return d
-        else:  # array_template
+        else:  # template
             self._key, key = random.split(self._key)
-            return self._contents(key)  # array
+            return self._contents(key)  # array or whatever the template gives
 
     def __jax_array__(self):
         return self.materialize()
@@ -60,22 +60,25 @@ class Skeleton(Array):
     def _has_been_associated_with_an_array_template_before(self) -> bool:
         return type(self._contents) is partial
 
-    def __eq__(self, array_template: ArrayTemplate) -> bool:
-        # todo: note to self <- __eq__ might be replaced with something else, as validate becomes more developed
+    def __eq__(self, template: ArrayTemplate) -> bool:
+        # need to make types for Array and ArrayTemplate
         if self._has_been_associated_with_an_array_template_before():
-            if array_equal(self._contents, array_template):
-                warn(
-                    f"Warning: params has been set before with shape {self._contents.keywords['shape']} "
-                    f"and being set now with a SAME shape {array_template.keywords['shape']}.\n\n"
-                    "Please make sure that this is intentional.",
-                    RuntimeWarning,
-                )  # still unsure, what to do.. what if the user just wants to validate twice ?
-                return True
+            warn(f"Has already been traced before")
+            return True
+        # if self._has_been_associated_with_an_array_template_before():
+        #     if array_equal(self._contents, array_template):
+        #         warn(
+        #             f"Warning: params has been set before with shape {self._contents.keywords['shape']} "
+        #             f"and being set now with a SAME shape {array_template.keywords['shape']}.\n\n"
+        #             "Please make sure that this is intentional.",
+        #             RuntimeWarning,
+        #         )  # still unsure, what to do.. what if the user just wants to validate twice ?
+        #         return True
 
-            raise ValueError(
-                f"params has been set before with shape {self._contents.keywords['shape']} and being set now with the DIFFERENT shape {array_template.keywords['shape']}"
-            )  # this is definitely an error
-        self._contents = array_template
+        # raise ValueError(
+        #     f"params has been set before with shape {self._contents.keywords['shape']} and being set now with the DIFFERENT shape {array_template.keywords['shape']}"
+        # )  # this is definitely an error
+        self._contents = template
         return True
 
     def __add__(self, x):

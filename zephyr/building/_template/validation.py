@@ -36,3 +36,9 @@ def validate(
                 f"Incompatible shapes: shape of `params`: {params.shape} should be {shape} as specified."
             )
     return params  # not reachable, just for mypy
+
+
+def validate_generic(params, template):
+    if isinstance(params, Skeleton):
+        params == template
+        return params
