@@ -4,6 +4,27 @@
 ![Version 0.0.11](https://img.shields.io/badge/version-0.0.11-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
+Zephyr makes coding your machine learning ideas, short, fast, and to the point.
+
+- fast: it is built on JAX
+- easy: declarative syntax makes coding a lot shorter. If you know math, python, (jax) numpy, then you can write zephyr
+- short: no boiler plate, focus on computations, not on initializing modules.
+- precise: tags makes it possible to target groups of weights for nuanced update rule
+
+## Quick start
+
+### Holes
+
+A hole `_` is a variable of type `PlaceholderHole` and can be passed to functions with the `@flexible` decorator to partial-ize the function. Eg. Given `f(x,y,z)`; `f(1,2,3)` is equivalent to `partial(f, y=2)(3,z=3)` is equivalent `f(_,2,_)(1,3)`. Holes make it easy to partialize a function.
+
+### Common Layers and Networks
+
+Nets and layers related to neural networks live in `zephyr.nets`
+
+### Trace
+
+# Old Readme below
+
 > New: Tags, and apply (already in code, to appear in README soon)
 
 Zephyr is a new FP-oriented neural network library/framework on top of JAX that helps
