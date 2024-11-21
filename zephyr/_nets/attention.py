@@ -79,36 +79,12 @@ def multi_head_attention(
     bias_initializer: initializers.Initializer = initializers.initializer_base,
     activation=lambda x: x,
 ) -> Array:
-    validate(
-        params,
-        expression=lambda params: params["branch_linear_queries"]["weights"].shape[-2]
-        // queries.shape[-1]
-        == num_heads,
-    )
-    queries = branch_linear(
-        params["branch_linear_queries"],
-        queries,
-        num_heads,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
-    keys = branch_linear(
-        params["branch_linear_keys"],
-        keys,
-        num_heads,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
-    values = branch_linear(
-        params["branch_linear_values"],
-        values,
-        num_heads,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )
+    new_shape_queries = queries.shape[:-1] + (num_heads, -1)
+    new_shape_keys = new_shape_queries
+    new_shape_values = values.shape[:-1] + (num_heads, -1)
+    queries = jnp.reshape(queries, new_shape_queries)
+    keys = jnp.reshape(keys, new_shape_keys)
+    values = jnp.reshape(values, new_shape_values)
 
     # queries, keys, values [..., s, h, e]
     #                       [...,-3,-2,-1]
@@ -137,7 +113,7 @@ def multi_head_attention(
     combined_heads = linear(
         params["linear_combined_heads"],
         combined_heads,
-        combined_heads.shape[-1] // num_heads,
+        combined_heads.shape[-1],
         with_bias,
         weights_initializer,
         bias_initializer,
