@@ -4,39 +4,13 @@
 ![Version 0.0.11](https://img.shields.io/badge/version-0.0.11-green)
 ![Early Stage](https://img.shields.io/badge/stage-early-yellow)
 
-Zephyr makes coding your machine learning ideas, short, fast, and to the point.
+Zephyr makes coding your machine learning ideas, short, fast, and to the point. Do a lot more while still writing less and still being more readable.
 
 - fast: it is built on JAX
 - easy: declarative syntax makes coding a lot shorter. If you know math, python, (jax) numpy, then you can write zephyr
 - short: no boiler plate, focus on computations, not on initializing modules.
 - precise: tags makes it possible to target groups of weights for nuanced update rule
-
-## Quick start
-
-### Holes
-
-A hole `_` is a variable of type `PlaceholderHole` and can be passed to functions with the `@flexible` decorator to partial-ize the function. Eg. Given `f(x,y,z)`; `f(1,2,3)` is equivalent to `partial(f, y=2)(3,z=3)` is equivalent `f(_,2,_)(1,3)`. Holes make it easy to partialize a function.
-
-### Common Layers and Networks
-
-Nets and layers related to neural networks live in `zephyr.nets`
-
-### Trace
-
-# Old Readme below
-
-> New: Tags, and apply (already in code, to appear in README soon)
-
-Zephyr is a new FP-oriented neural network library/framework on top of JAX that helps
-you write short, simple, declarative neural networks quickly and easily with minimal
-learning curve.
-
-**For those coming from other frameworks**: The main difference is that zephyr is oriented towards writing in an FP-style.
-No initialization of models is needed because models or nets are just regular functions - no need for separate init/build/construct
-and a call/forward.
-
-**For those new to deep learning**: As seen in many textbooks or materials, a neural network $M$ is a function that takes in parameters $\theta$, data or input $X$
-and hyper-parameters $\alpha$ and produces an output $y$. Symbolically, it is $y = M(\theta, X, \alpha)$.
+- generic but still easier to write: use whatever you want, even (fixed size) recursions are welcome like f(params, x, i) = f(params, x-1, i+1)
 
 ## Overview
 
@@ -51,6 +25,10 @@ without the hyperparameters, since those never change, we can use python's `part
 
 One more thing, this library was heavily inspired by Haiku, and so `params` is a dictionary whose leaves are Arrays. Zephyr, uses the same convention.
 
+## New Features not on the README yet
+
+- tags : A way to update weights in a more precise manner. Example: update weights differently depending how deep they are in a layer; update different subnetworks differently; so on. (it's rare to this so I don't have an example here, but it is possible in zephyr)
+
 ## Installation
 
 ```bash
@@ -62,8 +40,6 @@ pip install z-zephyr --upgrade
 [Examples](#examples) | [Sharp Bits](#gotchas) | [Direction](#direction) | [Motivation](#motivation)
 
 ## Examples<a id="examples"></a>
-
-> Note: OUTDATED : I've changed the API to make them even easier to write
 
 Look at the Following Examples
 
