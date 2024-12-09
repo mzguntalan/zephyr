@@ -57,7 +57,7 @@ def single_head_attention(
     # target [... p v]
 
     scores = queries @ jnp.moveaxis(keys, -1, -2) / np.sqrt(keys.shape[-1])
-    if masks:
+    if masks is not None:
         scores = apply_attention_mask(scores, masks)
     attention_map = nn.softmax(scores, axis=-1)
 

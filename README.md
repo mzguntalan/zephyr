@@ -1,8 +1,6 @@
 # zephyr
 
-![Work in Progress](https://img.shields.io/badge/work%20in%20progress-blue)
-![Version 0.0.11](https://img.shields.io/badge/version-0.0.11-green)
-![Early Stage](https://img.shields.io/badge/stage-early-yellow)
+![Version 0.0.12](https://img.shields.io/badge/version-0.0.12-green)
 
 Zephyr makes coding your machine learning ideas, short, fast, and to the point. Do a lot more while still writing less and still being more readable.
 
