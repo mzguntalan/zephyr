@@ -80,7 +80,7 @@ def multi_head_attention(
     activation=lambda x: x,
 ) -> Array:
     new_shape_queries = queries.shape[:-1] + (num_heads, -1)
-    new_shape_keys = new_shape_queries
+    new_shape_keys = keys.shape[:-1] + (num_heads, -1)
     new_shape_values = values.shape[:-1] + (num_heads, -1)
     queries = jnp.reshape(queries, new_shape_queries)
     keys = jnp.reshape(keys, new_shape_keys)
