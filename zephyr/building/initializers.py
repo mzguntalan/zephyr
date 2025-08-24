@@ -7,8 +7,6 @@ from jax import numpy as jnp
 from jax import random
 from jaxtyping import Array
 
-from zephyr._nets import embed
-from zephyr.project_typing import ActivationFunctionsWithKnownGain
 from zephyr.project_typing import KeyArray
 from zephyr.project_typing import Shape
 
