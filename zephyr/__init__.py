@@ -6,5 +6,5 @@ Early Stage
 
 from zephyr.building.tracing import trace
 
-__version__ = "0.0.12"
+__version__ = "0.0.14"
 __author__ = "Marko Zolo Gozano Untalan"
