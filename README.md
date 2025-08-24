@@ -1,6 +1,6 @@
 # zephyr
 
-![Version 0.0.14](https://img.shields.io/badge/version-0.0.14-green)
+![Version 0.0.15](https://img.shields.io/badge/version-0.0.15-green)
 
 Zephyr makes coding your machine learning ideas, short, fast, and to the point. Do a lot more while still writing less and still being more readable.
 
