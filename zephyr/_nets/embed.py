@@ -4,10 +4,9 @@ from jax import numpy as jnp
 from jaxtyping import Array
 from jaxtyping import PyTree
 
-from zephyr.building import template
 from zephyr.building._template.validation import validate
 from zephyr.building.initializers import Initializer
-from zephyr.building.initializers import initializer_base
+from zephyr.building.initializers import normal_scaled_by_rsqrt
 from zephyr.functools.partial import deriving_holes
 from zephyr.functools.partial import hole_aware
 
@@ -20,7 +19,7 @@ def token_embed(
     vocab_size: int,
     embed_dim: int,
     initial_embedding_matrix: Optional[Array] = None,
-    initializer: Initializer = initializer_base,
+    initializer: Initializer = normal_scaled_by_rsqrt,
     activation=lambda x: x,
 ) -> Array:
     if initial_embedding_matrix is not None:

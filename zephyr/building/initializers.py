@@ -7,6 +7,7 @@ from jax import numpy as jnp
 from jax import random
 from jaxtyping import Array
 
+from zephyr._nets import embed
 from zephyr.project_typing import ActivationFunctionsWithKnownGain
 from zephyr.project_typing import KeyArray
 from zephyr.project_typing import Shape
@@ -42,3 +43,9 @@ def uniform(key: KeyArray, shape: Shape) -> Array:
 
 def normal(key: KeyArray, shape: Shape) -> Array:
     return random.normal(key, shape)
+
+
+def normal_scaled_by_rsqrt(key: KeyArray, shape: Shape):
+    embed_dim = shape[-1]
+    scale = 1 / (embed_dim**0.5)
+    return scale * normal(key, shape)
