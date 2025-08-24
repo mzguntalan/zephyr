@@ -69,59 +69,77 @@ def single_head_attention(
 @flexible
 def multi_head_attention(
     params: PyTree,
-    queries: Array,
-    keys: Array,
-    values: Array,
+    queries: Array,  # [batch, seq_q, model_dim]
+    keys: Array,  # [batch, seq_k, model_dim]
+    values: Array,  # [batch, seq_k, model_dim]
     num_heads: int,
     masks: Optional[Array] = None,
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
-    activation=lambda x: x,
 ) -> Array:
-    new_shape_queries = queries.shape[:-1] + (num_heads, -1)
-    new_shape_keys = keys.shape[:-1] + (num_heads, -1)
-    new_shape_values = values.shape[:-1] + (num_heads, -1)
-    queries = jnp.reshape(queries, new_shape_queries)
-    keys = jnp.reshape(keys, new_shape_keys)
-    values = jnp.reshape(values, new_shape_values)
+    model_dim = queries.shape[-1]
+    head_dim = model_dim // num_heads
+    assert model_dim % num_heads == 0, "model_dim must be divisible by num_heads"
 
-    # queries, keys, values [..., s, h, e]
-    #                       [...,-3,-2,-1]
-
-    queries = jnp.moveaxis(queries, -2, -3)
-    keys = jnp.moveaxis(keys, -2, -3)
-    values = jnp.moveaxis(values, -2, -3)
-
-    multi_head_answers = single_head_attention(
-        params["single_head_attention"],
+    Q = linear(
+        params["q_proj"],
         queries,
+        num_heads * head_dim,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
+    )
+    K = linear(
+        params["k_proj"],
         keys,
+        num_heads * head_dim,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
+    )
+    V = linear(
+        params["v_proj"],
         values,
-        masks,
-        with_bias,
-        weights_initializer,
-        bias_initializer,
-    )  # [..., h, s, e]
-
-    multi_head_answers = jnp.moveaxis(multi_head_answers, -2, -3)  # [..., s , h, e]
-
-    combined_heads = jnp.reshape(
-        multi_head_answers, multi_head_answers.shape[:-2] + (-1,)
-    )
-
-    combined_heads = linear(
-        params["linear_combined_heads"],
-        combined_heads,
-        combined_heads.shape[-1],
+        num_heads * head_dim,
         with_bias,
         weights_initializer,
         bias_initializer,
     )
 
-    combined_heads = activation(combined_heads)
+    def split_heads(x):
+        return jnp.reshape(
+            x, x.shape[:-1] + (num_heads, head_dim)
+        )  # [..., heads, head_dim]
 
-    return combined_heads
+    Q = jnp.moveaxis(split_heads(Q), -2, 1)  # [batch, heads, seq_q, head_dim]
+    K = jnp.moveaxis(split_heads(K), -2, 1)  # [batch, heads, seq_k, head_dim]
+    V = jnp.moveaxis(split_heads(V), -2, 1)  # [batch, heads, seq_k, head_dim]
+
+    scores = jnp.matmul(Q, jnp.swapaxes(K, -1, -2)) / np.sqrt(
+        head_dim
+    )  # [batch, heads, seq_q, seq_k]
+
+    if masks is not None:
+        # Mask should broadcast to [batch, heads, seq_q, seq_k]
+        scores = apply_attention_mask(scores, masks)
+
+    attn_weights = nn.softmax(scores, axis=-1)  # [batch, heads, seq_q, seq_k]
+    attn_output = jnp.matmul(attn_weights, V)  # [batch, heads, seq_q, head_dim]
+
+    attn_output = jnp.moveaxis(attn_output, 1, -2)  # [batch, seq_q, heads, head_dim]
+    attn_output = jnp.reshape(attn_output, attn_output.shape[:-2] + (model_dim,))
+
+    output: Array = linear(
+        params["out_proj"],
+        attn_output,
+        model_dim,
+        with_bias,
+        weights_initializer,
+        bias_initializer,
+    )
+
+    return output
 
 
 @flexible
