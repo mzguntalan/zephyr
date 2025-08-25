@@ -1,4 +1,6 @@
+from typing import Literal
 from typing import Optional
+from warnings import deprecated
 
 import numpy as np
 from jax import nn
@@ -14,6 +16,7 @@ from zephyr.functools.partial import flexible
 from zephyr.masking import apply_attention_mask
 
 
+@deprecated
 @flexible
 def single_head_attention(
     params: PyTree,
@@ -74,6 +77,8 @@ def multi_head_attention(
     values: Array,  # [batch, seq_k, model_dim]
     num_heads: int,
     masks: Optional[Array] = None,
+    is_causal: bool = False,
+    implementation: Literal["xla", "cudnn"] = "cudnn",
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
@@ -107,7 +112,7 @@ def multi_head_attention(
         bias_initializer,
     )
 
-    def split_heads(x):
+    def split_heads(x: Array) -> Array:
         return jnp.reshape(
             x, x.shape[:-1] + (num_heads, head_dim)
         )  # [..., heads, head_dim]
@@ -116,21 +121,14 @@ def multi_head_attention(
     K = jnp.moveaxis(split_heads(K), -2, 1)  # [batch, heads, seq_k, head_dim]
     V = jnp.moveaxis(split_heads(V), -2, 1)  # [batch, heads, seq_k, head_dim]
 
-    scores = jnp.matmul(Q, jnp.swapaxes(K, -1, -2)) / np.sqrt(
-        head_dim
-    )  # [batch, heads, seq_q, seq_k]
-
-    if masks is not None:
-        # Mask should broadcast to [batch, heads, seq_q, seq_k]
-        scores = apply_attention_mask(scores, masks)
-
-    attn_weights = nn.softmax(scores, axis=-1)  # [batch, heads, seq_q, seq_k]
-    attn_output = jnp.matmul(attn_weights, V)  # [batch, heads, seq_q, head_dim]
+    attn_output = nn.dot_product_attention(
+        Q, K, V, mask=masks, is_causal=is_causal, implementation=implementation
+    )
 
     attn_output = jnp.moveaxis(attn_output, 1, -2)  # [batch, seq_q, heads, head_dim]
     attn_output = jnp.reshape(attn_output, attn_output.shape[:-2] + (model_dim,))
 
-    output: Array = linear(
+    output = linear(
         params["out_proj"],
         attn_output,
         model_dim,
@@ -145,13 +143,14 @@ def multi_head_attention(
 @flexible
 def multi_head_self_attention(
     params: PyTree,
-    x: Array,
+    x: Array,  # [batch, seq_k, model_dim]
     num_heads: int,
     masks: Optional[Array] = None,
+    is_causal: bool = False,
+    implementation: Literal["xla", "cudnn"] = "cudnn",
     with_bias: bool = True,
     weights_initializer: initializers.Initializer = initializers.initializer_base,
     bias_initializer: initializers.Initializer = initializers.initializer_base,
-    activation=lambda x: x,
 ) -> Array:
     return multi_head_attention(
         params,
@@ -160,11 +159,9 @@ def multi_head_self_attention(
         x,
         num_heads,
         masks,
+        is_causal,
+        implementation,
         with_bias,
         weights_initializer,
         bias_initializer,
-        activation,
     )
-
-
-# todo: refine this to align with others
