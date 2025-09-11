@@ -1,8 +1,8 @@
 from typing import Literal
 from typing import Optional
-from warnings import deprecated
 
 import numpy as np
+from jax import lax
 from jax import nn
 from jax import numpy as jnp
 from jaxtyping import Array
@@ -16,7 +16,6 @@ from zephyr.functools.partial import flexible
 from zephyr.masking import apply_attention_mask
 
 
-@deprecated
 @flexible
 def single_head_attention(
     params: PyTree,
@@ -117,15 +116,24 @@ def multi_head_attention(
             x, x.shape[:-1] + (num_heads, head_dim)
         )  # [..., heads, head_dim]
 
-    Q = jnp.moveaxis(split_heads(Q), -2, 1)  # [batch, heads, seq_q, head_dim]
-    K = jnp.moveaxis(split_heads(K), -2, 1)  # [batch, heads, seq_k, head_dim]
-    V = jnp.moveaxis(split_heads(V), -2, 1)  # [batch, heads, seq_k, head_dim]
+    # Q = jnp.moveaxis(split_heads(Q), -2, 1)  # [batch, heads, seq_q, head_dim]
+    # K = jnp.moveaxis(split_heads(K), -2, 1)  # [batch, heads, seq_k, head_dim]
+    # V = jnp.moveaxis(split_heads(V), -2, 1)  # [batch, heads, seq_k, head_dim]
+
+    Q = split_heads(Q)
+    K = split_heads(K)
+    V = split_heads(V)
+
+    if implementation == "cudnn":
+        Q = lax.convert_element_type(Q, jnp.bfloat16)  # TODO make this flexible
+        K = lax.convert_element_type(K, jnp.bfloat16)  # TODO make this flexible
+        V = lax.convert_element_type(V, jnp.bfloat16)  # TODO make this flexible
 
     attn_output = nn.dot_product_attention(
         Q, K, V, mask=masks, is_causal=is_causal, implementation=implementation
     )
 
-    attn_output = jnp.moveaxis(attn_output, 1, -2)  # [batch, seq_q, heads, head_dim]
+    # attn_output = jnp.moveaxis(attn_output, 1, -2)  # [batch, seq_q, heads, head_dim]
     attn_output = jnp.reshape(attn_output, attn_output.shape[:-2] + (model_dim,))
 
     output = linear(
